@@ -1,0 +1,306 @@
+{
+  "metadata": {
+    "backupId": "backup_1764095823475",
+    "timestamp": "2025-11-25T18:37:03.475Z",
+    "version": "1.0",
+    "system": "Hamdard University FYP Portal",
+    "totalRecords": 15
+  },
+  "database": {
+    "users": [
+      {
+        "id": "cmh6fwbpc0000i6rk2sp97htb",
+        "email": "admin@hamdard.edu",
+        "name": "Admin (Super Admin)",
+        "password": "[REDACTED]",
+        "role": "ADMIN",
+        "status": "APPROVED",
+        "rollNumber": null,
+        "profileImage": null,
+        "gpa": null,
+        "department": null,
+        "specialization": null,
+        "contactInfo": null,
+        "createdAt": "2025-10-25T15:33:29.277Z",
+        "updatedAt": "2025-11-24T14:16:09.219Z",
+        "studentProfile": null,
+        "teacherProfile": null
+      },
+      {
+        "id": "cmh6fwbq20001i6rk04w9u8wq",
+        "email": "committee@hamdard.edu",
+        "name": "Committee Head",
+        "password": "[REDACTED]",
+        "role": "COMMITTEE_HEAD",
+        "status": "APPROVED",
+        "rollNumber": null,
+        "profileImage": null,
+        "gpa": null,
+        "department": null,
+        "specialization": null,
+        "contactInfo": null,
+        "createdAt": "2025-10-25T15:33:29.306Z",
+        "updatedAt": "2025-11-24T14:17:15.538Z",
+        "studentProfile": null,
+        "teacherProfile": null
+      },
+      {
+        "id": "cmh6fwbq90002i6rkeqtwrn5i",
+        "email": "teacher@hamdard.edu",
+        "name": "sara",
+        "password": "[REDACTED]",
+        "role": "TEACHER",
+        "status": "APPROVED",
+        "rollNumber": null,
+        "profileImage": "/profile-pictures/profile_1763484928201_WhatsApp_Image_2025_11_13_at_23.44.12_c90bfe88.jpg",
+        "gpa": null,
+        "department": "",
+        "specialization": null,
+        "contactInfo": null,
+        "createdAt": "2025-10-25T15:33:29.314Z",
+        "updatedAt": "2025-11-24T14:17:20.021Z",
+        "studentProfile": null,
+        "teacherProfile": null
+      },
+      {
+        "id": "cmh6fwbqf0003i6rkfw47v1tz",
+        "email": "student@hamdard.edu",
+        "name": "Shayan",
+        "password": "[REDACTED]",
+        "role": "STUDENT",
+        "status": "APPROVED",
+        "rollNumber": "1333",
+        "profileImage": null,
+        "gpa": 3.6,
+        "department": "CS",
+        "specialization": null,
+        "contactInfo": "0316544846548",
+        "createdAt": "2025-10-25T15:33:29.320Z",
+        "updatedAt": "2025-11-24T14:15:58.923Z",
+        "studentProfile": null,
+        "teacherProfile": null
+      },
+      {
+        "id": "cmic6i99d0000i658et20pvwm",
+        "email": "ali123@gmail.com",
+        "name": "Ali",
+        "password": "[REDACTED]",
+        "role": "STUDENT",
+        "status": "APPROVED",
+        "rollNumber": "1222",
+        "profileImage": null,
+        "gpa": 3.73,
+        "department": "SE",
+        "specialization": null,
+        "contactInfo": null,
+        "createdAt": "2025-11-23T20:36:55.775Z",
+        "updatedAt": "2025-11-24T14:15:50.225Z",
+        "studentProfile": {
+          "id": "cmic6i99v0002i6584bv1m7ir",
+          "userId": "cmic6i99d0000i658et20pvwm",
+          "semester": 1,
+          "batch": "2025",
+          "interests": null,
+          "skills": null
+        },
+        "teacherProfile": null
+      },
+      {
+        "id": "cmid8gov9000ai6dcholpgo2y",
+        "email": "saqib123",
+        "name": "saqib ahmed",
+        "password": "[REDACTED]",
+        "role": "STUDENT",
+        "status": "APPROVED",
+        "rollNumber": null,
+        "profileImage": null,
+        "gpa": null,
+        "department": "CS",
+        "specialization": null,
+        "contactInfo": null,
+        "createdAt": "2025-11-24T14:19:28.100Z",
+        "updatedAt": "2025-11-24T14:19:28.100Z",
+        "studentProfile": null,
+        "teacherProfile": null
+      },
+      {
+        "id": "cmiesa6pz0000i6lkzorz2p2o",
+        "email": "01lucasmorgan@gmail.com",
+        "name": "Lucas",
+        "password": "[REDACTED]",
+        "role": "STUDENT",
+        "status": "APPROVED",
+        "rollNumber": "12021",
+        "profileImage": null,
+        "gpa": 3.8,
+        "department": "CS",
+        "specialization": null,
+        "contactInfo": null,
+        "createdAt": "2025-11-25T16:22:03.142Z",
+        "updatedAt": "2025-11-25T16:36:35.935Z",
+        "studentProfile": {
+          "id": "cmiesa6qi0002i6lkp7p73klf",
+          "userId": "cmiesa6pz0000i6lkzorz2p2o",
+          "semester": 1,
+          "batch": "2025",
+          "interests": null,
+          "skills": null
+        },
+        "teacherProfile": null
+      }
+    ],
+    "projects": [],
+    "notifications": [
+      {
+        "id": "cmid8c0t50001i6dcvi8qzc1z",
+        "userId": "cmic6i99d0000i658et20pvwm",
+        "title": "Account Approved",
+        "message": "Your account status has been changed to approved.",
+        "type": "PROFILE_UPDATE",
+        "isRead": false,
+        "relatedId": null,
+        "createdAt": "2025-11-24T14:15:50.283Z"
+      },
+      {
+        "id": "cmid8c7hw0003i6dcn83g1umv",
+        "userId": "cmh6fwbqf0003i6rkfw47v1tz",
+        "title": "Account Approved",
+        "message": "Your account status has been changed to approved.",
+        "type": "PROFILE_UPDATE",
+        "isRead": false,
+        "relatedId": null,
+        "createdAt": "2025-11-24T14:15:58.962Z"
+      },
+      {
+        "id": "cmid8cffo0005i6dcxxtgo9wp",
+        "userId": "cmh6fwbpc0000i6rk2sp97htb",
+        "title": "Account Approved",
+        "message": "Your account status has been changed to approved.",
+        "type": "PROFILE_UPDATE",
+        "isRead": false,
+        "relatedId": null,
+        "createdAt": "2025-11-24T14:16:09.252Z"
+      },
+      {
+        "id": "cmid8dum50007i6dc8sx5uz09",
+        "userId": "cmh6fwbq20001i6rk04w9u8wq",
+        "title": "Account Approved",
+        "message": "Your account status has been changed to approved.",
+        "type": "PROFILE_UPDATE",
+        "isRead": false,
+        "relatedId": null,
+        "createdAt": "2025-11-24T14:17:15.581Z"
+      },
+      {
+        "id": "cmid8dy3m0009i6dcd4m703gz",
+        "userId": "cmh6fwbq90002i6rkeqtwrn5i",
+        "title": "Account Approved",
+        "message": "Your account status has been changed to approved.",
+        "type": "PROFILE_UPDATE",
+        "isRead": false,
+        "relatedId": null,
+        "createdAt": "2025-11-24T14:17:20.098Z"
+      },
+      {
+        "id": "cmiessw6x0001i6es7t98q760",
+        "userId": "cmiesa6pz0000i6lkzorz2p2o",
+        "title": "Account Approved",
+        "message": "Your account status has been changed to approved.",
+        "type": "PROFILE_UPDATE",
+        "isRead": false,
+        "relatedId": null,
+        "createdAt": "2025-11-25T16:36:35.958Z"
+      }
+    ],
+    "groups": [],
+    "groupMembers": [],
+    "groupRequests": [],
+    "supervisorRequests": [],
+    "messages": [],
+    "conversations": [],
+    "meetings": []
+  },
+  "files": {
+    "committees": [
+      {
+        "id": "1",
+        "name": "Computer Science Committee",
+        "head": "Dr. Muhammad Ali",
+        "members": [
+          "Dr. Ayesha Khan",
+          "Prof. Bilal Ahmed",
+          "Dr. Sara Noor"
+        ],
+        "status": "Active",
+        "created": "2024-01-01"
+      },
+      {
+        "id": "1763996058854",
+        "name": "Software Engg Committee",
+        "head": "Prof.Atif ",
+        "members": [
+          "Sara",
+          "Muneeb",
+          "Bilal"
+        ],
+        "status": "Active",
+        "created": "2025-11-24"
+      }
+    ],
+    "fileMetadata": {
+      "1761353484026": {
+        "status": "Approved",
+        "approvedBy": "Admin (Super Admin)",
+        "approvedDate": "2025-11-24T20:50:29.169Z"
+      },
+      "1761352868847": {
+        "status": "Approved",
+        "approvedBy": "Admin (Super Admin)",
+        "approvedDate": "2025-11-25T17:41:03.428Z"
+      }
+    },
+    "systemSettings": {
+      "general": {
+        "systemName": "FYP Automation System",
+        "universityName": "Hamdard University",
+        "contactEmail": "admin@hamdard.edu.pk",
+        "maintenanceMode": false,
+        "allowRegistration": true
+      },
+      "security": {
+        "minPasswordLength": 10,
+        "sessionTimeout": 24,
+        "maxLoginAttempts": 5,
+        "requireEmailVerification": false,
+        "enableTwoFactor": false
+      },
+      "notifications": {
+        "emailNotifications": true,
+        "smsNotifications": false,
+        "pushNotifications": true,
+        "deadlineReminders": true,
+        "approvalNotifications": true
+      },
+      "backup": {
+        "automaticBackup": true,
+        "backupFrequency": "daily",
+        "retentionDays": 30
+      }
+    },
+    "loginAttempts": {}
+  },
+  "statistics": {
+    "totalUsers": 7,
+    "totalProjects": 0,
+    "totalNotifications": 6,
+    "totalGroups": 0,
+    "totalMessages": 0,
+    "totalMeetings": 0,
+    "usersByRole": {
+      "students": 4,
+      "teachers": 1,
+      "admins": 1,
+      "committeeHeads": 1
+    }
+  }
+}

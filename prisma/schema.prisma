@@ -1,0 +1,540 @@
+// Student Form Submissions
+model FormSubmission {
+  id          String   @id @default(cuid())
+  type        String   // proposal, supervisor-change, consent, extension, reeval, general
+  data        Json     // All form fields as JSON
+  submittedBy String?  // User ID (optional, if available)
+  status      String?  @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedBy  String?  // User ID who approved/rejected
+  reviewedBy  String?  // User ID who reviewed (committee head or admin)
+  reviewComments String? // Comments from reviewer
+  reviewedAt  DateTime? // When it was reviewed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String     @id @default(cuid())
+  email            String     @unique
+  name             String?
+  password         String
+  role             UserRole   @default(STUDENT)
+  status           UserStatus @default(PENDING)
+  isActive         Boolean    @default(true)
+  rollNumber       String?    @unique
+  profileImage     String?
+  gpa              Float?
+  department       String?
+  specialization   String?
+  contactInfo      String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  // Student relationships
+  studentProfile         StudentProfile?
+  groupMemberships       GroupMember[]
+  sentRequests           GroupRequest[]            @relation("SentRequests")
+  receivedRequests       GroupRequest[]            @relation("ReceivedRequests")
+  sentSupervisorRequests SupervisorRequest[]       @relation("StudentSentSupervisorRequests")
+  sentMessages           Message[]                 @relation("SentMessages")
+  receivedMessages       Message[]                 @relation("ReceivedMessages")
+  conversations          ConversationParticipant[]
+  notifications          Notification[]
+  meetings               MeetingAttendee[]         @relation("UserMeetings")
+  projectSubmissions     ProjectSubmission[]       @relation("StudentSubmissions")
+
+  // Teacher relationships
+  teacherProfile             TeacherProfile?
+  supervisedProjects         Project[]           @relation("SupervisedProjects")
+  receivedSupervisorRequests SupervisorRequest[] @relation("TeacherReceivedSupervisorRequests")
+  createdProjects            Project[]           @relation("CreatedProjects")
+  organizedMeetings          Meeting[]
+
+  // Common relationships
+  posts Post[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  COMMITTEE_HEAD
+  TEACHER
+  STUDENT
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CONDITIONALLY_REGISTERED
+}
+
+enum EligibilityStatus {
+  ELIGIBLE
+  CONDITIONAL
+  INELIGIBLE
+}
+
+enum GroupRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum SupervisorRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ProjectStatus {
+  PROPOSED
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+// Student Profile
+model StudentProfile {
+  id                    String            @id @default(cuid())
+  userId                String            @unique
+  semester              Int?
+  batch                 String?
+  interests             String?
+  skills                String?
+  faculty               String?
+  session               String?
+  contactInfo           String?
+  cgpa                  Float?
+  prerequisitesPassed   Boolean           @default(false)
+  eligibilityStatus     EligibilityStatus @default(ELIGIBLE)
+  transcriptUrl         String?
+  unpassedCourses       String?
+  policyAccepted        Boolean           @default(false)
+  policyAcceptedAt      DateTime?
+  conditionalCommitment String?
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Teacher Profile
+model TeacherProfile {
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  employeeId          String?
+  designation         String?
+  officeHours         String?
+  faculty             String?
+  supervisionCapacity Int     @default(4)
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Groups
+model Group {
+  id               String    @id @default(cuid())
+  name             String
+  description      String?
+  maxMembers       Int       @default(3)
+  isActive         Boolean   @default(true)
+  isApproved       Boolean   @default(false)
+  approvedBy       String?
+  approvedAt       DateTime?
+  addMemberDeadline DateTime? // Deadline for adding a new member when only one member remains
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  members  GroupMember[]
+  projects Project[]
+}
+
+model GroupMember {
+  id       String   @id @default(cuid())
+  groupId  String
+  userId   String
+  role     String   @default("MEMBER")
+  joinedAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+// Group Requests
+model GroupRequest {
+  id         String             @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  groupId    String?
+  message    String?
+  groupName  String? // Group name proposed by the sender
+  status     GroupRequestStatus @default(PENDING)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  fromUser User @relation("SentRequests", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("ReceivedRequests", fields: [toUserId], references: [id], onDelete: Cascade)
+}
+
+// Projects
+model Project {
+  id                String        @id @default(cuid())
+  title             String
+  description       String
+  requirements      String?
+  status            ProjectStatus @default(PROPOSED)
+  teacherId         String
+  supervisorId      String?
+  groupId           String?
+  isFacultyProposed Boolean       @default(false) // Mark if this is a faculty-proposed idea
+  domain            String? // Project domain/area
+  objectives        String? // Project objectives
+  abstract          String? // Project abstract
+  tools             String? // Tools and technologies
+  proposalDocument  String? // Path to uploaded proposal document
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  teacher            User                @relation("CreatedProjects", fields: [teacherId], references: [id])
+  supervisor         User?               @relation("SupervisedProjects", fields: [supervisorId], references: [id])
+  group              Group?              @relation(fields: [groupId], references: [id])
+  submissions        ProjectSubmission[]
+  supervisorRequests SupervisorRequest[]
+}
+
+// Project Submissions
+model ProjectSubmission {
+  id                       String    @id @default(cuid())
+  projectId                String?
+  studentId                String
+  title                    String
+  description              String?
+  fileUrl                  String?
+  fileType                 String // PROPOSAL, REPORT, etc.
+  fileName                 String? // Original file name
+  fileSize                 Int? // File size in bytes
+  status                   String    @default("PENDING") // PENDING, APPROVED, REJECTED, COMMITTEE_APPROVED, ADMIN_APPROVED, CONDITIONALLY_APPROVED
+  supervisorApprovalStatus String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  supervisorRemarks        String?
+  adminRemarks             String?
+  committeeRemarks         String?
+  conditionalApprovalRemarks String? // Remarks for conditional approval
+  defenseAttempts          Int       @default(0) // Track defense attempts (0=not defended, 1=original, 2=first re-defense, 3=final re-defense)
+  defenseStatus            String    @default("NOT_SCHEDULED") // NOT_SCHEDULED, SCHEDULED, COMPLETED, FAILED
+  approvedBySupervisorAt   DateTime?
+  version                  Int       @default(1)
+  isSubmitted              Boolean   @default(false)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  student User    @relation("StudentSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+// Supervisor Requests
+model SupervisorRequest {
+  id        String                  @id @default(cuid())
+  studentId String
+  teacherId String
+  projectId String?
+  message   String?
+  status    SupervisorRequestStatus @default(PENDING)
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  student User     @relation("StudentSentSupervisorRequests", fields: [studentId], references: [id], onDelete: Cascade)
+  teacher User     @relation("TeacherReceivedSupervisorRequests", fields: [teacherId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id])
+}
+
+// Messages
+model Message {
+  id             String    @id @default(cuid())
+  content        String
+  senderId       String
+  receiverId     String
+  conversationId String
+  isRead         Boolean   @default(false)
+  fileUrl        String?
+  fileName       String?
+  fileType       String?
+  fileSize       Int?
+  deletedAt      DateTime?
+  deletedBy      String?
+  createdAt      DateTime  @default(now())
+
+  sender       User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver     User         @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+// Conversations
+model Conversation {
+  id         String   @id @default(cuid())
+  isGroup    Boolean  @default(false)
+  groupName  String?
+  groupImage String? // Group profile picture URL
+  adminId    String? // Group admin user ID
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+// Notifications
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String // GROUP_REQUEST, MESSAGE, SUPERVISION_REQUEST, etc.
+  isRead    Boolean  @default(false)
+  relatedId String? // ID of related entity (request, message, etc.)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Meetings
+model Meeting {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  location    String?
+  isOnline    Boolean       @default(false)
+  meetingLink String?
+  status      MeetingStatus @default(SCHEDULED)
+  organizerId String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  organizer User              @relation(fields: [organizerId], references: [id])
+  attendees MeetingAttendee[]
+}
+
+model MeetingAttendee {
+  id        String   @id @default(cuid())
+  meetingId String
+  userId    String
+  status    String   @default("INVITED")
+  createdAt DateTime @default(now())
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation("UserMeetings", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId])
+}
+
+// Announcements
+model Announcement {
+  id               String           @id @default(cuid())
+  title            String
+  content          String
+  type             AnnouncementType
+  createdBy        String
+  priority         String           @default("NORMAL") // HIGH, NORMAL, LOW
+  deadlineDate     DateTime?
+  expiresAt        DateTime?
+  isActive         Boolean          @default(true)
+  targetedTeachers String?          // JSON array of teacher IDs
+  targetedGroups   String?          // JSON array of group IDs
+  relatedId        String?          // ID of related entity (e.g., defense schedule ID)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  proofSubmissions ProofSubmission[]
+  evaluations      Evaluation[]
+}
+
+enum AnnouncementType {
+  PROOF_SUBMISSION
+  DEFENSE_SCHEDULE
+  OTHER
+}
+
+// Proof Submissions (for prerequisite verification)
+model ProofSubmission {
+  id             String      @id @default(cuid())
+  announcementId String
+  studentId      String
+  groupId        String?
+  proofFileUrl   String
+  proofFileName  String
+  proofFileSize  Int
+  transcriptUrl  String?
+  cgpa           Float?
+  remarks        String?
+  status         ProofStatus @default(PENDING)
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  reviewComments String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+}
+
+enum ProofStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// FYP Evaluations (both FYP-I and FYP-II)
+model Evaluation {
+  id                String           @id @default(cuid())
+  announcementId    String
+  groupId           String
+  projectId         String?
+  evaluationType    EvaluationType
+  defenseDate       DateTime?
+  defenseLocation   String?
+  presentationUrl   String?
+  reportUrl         String?
+  codeUrl           String?
+  status            EvaluationStatus @default(SCHEDULED)
+  score             Float?
+  feedback          String?
+  attemptNumber     Int              @default(1) // 1, 2, or 3
+  juryMembers       String? // JSON array of user IDs
+  supervisorRemarks String?
+  finalMarks        Float?
+  isPassed          Boolean          @default(false)
+  needsReEvaluation Boolean          @default(false)
+  archivePath       String? // Path to archived project folder
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+}
+
+enum EvaluationType {
+  FYP_I
+  FYP_II
+}
+
+enum EvaluationStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  RE_EVALUATION_REQUIRED
+  FAILED
+}
+
+// Faculties
+model Faculty {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  code        String?  @unique
+  departments String? // Comma-separated list of departments
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Committees
+model Committee {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  chairpersonId String?
+  members       String? // JSON array of user IDs
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Defense Schedules (for Proposal, FYP-I, FYP-II)
+model DefenseSchedule {
+  id          String      @id @default(cuid())
+  defenseType DefenseType
+  title       String
+  description String?
+  defenseDate DateTime
+  defenseTime String
+  venue       String
+  status      String      @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  isPublished Boolean     @default(false)
+  createdBy   String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  juryAssignments JuryAssignment[]
+}
+
+enum DefenseType {
+  PROPOSAL
+  FYP_I
+  FYP_II
+}
+
+// Jury Assignment
+model JuryAssignment {
+  id                String   @id @default(cuid())
+  defenseScheduleId String
+  groupId           String
+  groupName         String?
+  projectTitle      String?
+  juryMembers       String // JSON array of teacher user IDs
+  chairpersonId     String? // Lead jury member
+  evaluationStatus  String   @default("PENDING") // PENDING, EVALUATED, PASSED, FAILED
+  marks             Float?
+  feedback          String?
+  juryEvaluations   String? // JSON object: { "userId": { "status": "ACCEPTED", "marks": 80, "feedback": "...", "evaluatedAt": "..." } }
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  defenseSchedule DefenseSchedule @relation(fields: [defenseScheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([defenseScheduleId, groupId])
+}

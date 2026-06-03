@@ -1,0 +1,864 @@
+{
+  "metadata": {
+    "backupId": "backup_1765571700777",
+    "timestamp": "2025-12-12T20:35:00.777Z",
+    "version": "1.0",
+    "system": "Hamdard University FYP Portal",
+    "totalRecords": 46
+  },
+  "database": {
+    "users": [
+      {
+        "id": "cmj1ovbq80000i6ognh2d7t5b",
+        "email": "ahmedshayan928@gmail.com",
+        "name": "Administrator",
+        "password": "[REDACTED]",
+        "role": "ADMIN",
+        "status": "APPROVED",
+        "isActive": true,
+        "rollNumber": null,
+        "profileImage": null,
+        "gpa": null,
+        "department": "Administration",
+        "specialization": null,
+        "contactInfo": null,
+        "resetToken": "913062",
+        "resetTokenExpiry": "2025-12-11T21:55:03.663Z",
+        "createdAt": "2025-12-11T17:05:12.978Z",
+        "updatedAt": "2025-12-11T20:55:03.665Z",
+        "studentProfile": null,
+        "teacherProfile": null
+      },
+      {
+        "id": "cmj1ovbwu0001i6ogurvx4iuf",
+        "email": "helpfromashley5@gmail.com",
+        "name": "Ashley ",
+        "password": "[REDACTED]",
+        "role": "TEACHER",
+        "status": "APPROVED",
+        "isActive": true,
+        "rollNumber": null,
+        "profileImage": null,
+        "gpa": null,
+        "department": "Computer Science",
+        "specialization": null,
+        "contactInfo": null,
+        "resetToken": null,
+        "resetTokenExpiry": null,
+        "createdAt": "2025-12-11T17:05:13.230Z",
+        "updatedAt": "2025-12-11T18:22:48.584Z",
+        "studentProfile": null,
+        "teacherProfile": {
+          "id": "cmj1ovbxq0003i6ogjyt318ng",
+          "userId": "cmj1ovbwu0001i6ogurvx4iuf",
+          "employeeId": "EMP001",
+          "designation": "Associate Professor",
+          "officeHours": "9:00 AM - 5:00 PM",
+          "faculty": null,
+          "supervisionCapacity": 4
+        }
+      },
+      {
+        "id": "cmj1ovc670004i6ogcnd38pf9",
+        "email": "committee@hamdard.edu",
+        "name": "Dr. Committee Head",
+        "password": "[REDACTED]",
+        "role": "COMMITTEE_HEAD",
+        "status": "APPROVED",
+        "isActive": true,
+        "rollNumber": null,
+        "profileImage": null,
+        "gpa": null,
+        "department": "Computer Science",
+        "specialization": null,
+        "contactInfo": null,
+        "resetToken": null,
+        "resetTokenExpiry": null,
+        "createdAt": "2025-12-11T17:05:13.567Z",
+        "updatedAt": "2025-12-11T17:05:13.567Z",
+        "studentProfile": null,
+        "teacherProfile": null
+      },
+      {
+        "id": "cmj1ovcai0005i6oge677r1l9",
+        "email": "erikapayne.us@gmail.com",
+        "name": "Erika ",
+        "password": "[REDACTED]",
+        "role": "STUDENT",
+        "status": "APPROVED",
+        "isActive": true,
+        "rollNumber": "CS2021001",
+        "profileImage": null,
+        "gpa": 3.8,
+        "department": "Computer Science",
+        "specialization": null,
+        "contactInfo": "03148962421",
+        "resetToken": null,
+        "resetTokenExpiry": null,
+        "createdAt": "2025-12-11T17:05:13.722Z",
+        "updatedAt": "2025-12-11T21:43:44.865Z",
+        "studentProfile": {
+          "id": "cmj1ovcaw0007i6ogt4o2rpr8",
+          "userId": "cmj1ovcai0005i6oge677r1l9",
+          "semester": 6,
+          "batch": "2021",
+          "interests": "Machine Learning, AI, Web Development",
+          "skills": "React, Node.js, Python, TensorFlow",
+          "faculty": null,
+          "session": null,
+          "contactInfo": null,
+          "cgpa": null,
+          "prerequisitesPassed": true,
+          "eligibilityStatus": "ELIGIBLE",
+          "transcriptUrl": null,
+          "unpassedCourses": null,
+          "policyAccepted": true,
+          "policyAcceptedAt": null,
+          "conditionalCommitment": null
+        },
+        "teacherProfile": null
+      },
+      {
+        "id": "cmj1pjsnh0000i6f4siepounu",
+        "email": "01lucasmorgan@gmail.com",
+        "name": "Lucas",
+        "password": "[REDACTED]",
+        "role": "STUDENT",
+        "status": "APPROVED",
+        "isActive": true,
+        "rollNumber": "12021",
+        "profileImage": null,
+        "gpa": 3.8,
+        "department": "CS",
+        "specialization": null,
+        "contactInfo": null,
+        "resetToken": null,
+        "resetTokenExpiry": null,
+        "createdAt": "2025-12-11T17:24:14.668Z",
+        "updatedAt": "2025-12-12T16:35:10.362Z",
+        "studentProfile": {
+          "id": "cmj1pjsom0002i6f4ueoc767s",
+          "userId": "cmj1pjsnh0000i6f4siepounu",
+          "semester": 1,
+          "batch": "2025",
+          "interests": null,
+          "skills": null,
+          "faculty": "FEST",
+          "session": "2021-2025",
+          "contactInfo": "0317865482",
+          "cgpa": 3.8,
+          "prerequisitesPassed": true,
+          "eligibilityStatus": "ELIGIBLE",
+          "transcriptUrl": null,
+          "unpassedCourses": null,
+          "policyAccepted": true,
+          "policyAcceptedAt": "2025-12-11T17:24:14.705Z",
+          "conditionalCommitment": null
+        },
+        "teacherProfile": null
+      },
+      {
+        "id": "cmj1qqs7q0000i66cyuu29pqv",
+        "email": "emilydaphne01@gmail.com",
+        "name": "Emily",
+        "password": "[REDACTED]",
+        "role": "TEACHER",
+        "status": "APPROVED",
+        "isActive": true,
+        "rollNumber": null,
+        "profileImage": null,
+        "gpa": null,
+        "department": "Software Engineering",
+        "specialization": null,
+        "contactInfo": null,
+        "resetToken": null,
+        "resetTokenExpiry": null,
+        "createdAt": "2025-12-11T17:57:40.308Z",
+        "updatedAt": "2025-12-12T20:15:49.061Z",
+        "studentProfile": null,
+        "teacherProfile": {
+          "id": "cmj1qqs8o0002i66c9mrz4n5j",
+          "userId": "cmj1qqs7q0000i66cyuu29pqv",
+          "employeeId": "EMP1765475860339",
+          "designation": "Faculty Member",
+          "officeHours": "9:00 AM - 5:00 PM",
+          "faculty": null,
+          "supervisionCapacity": 5
+        }
+      },
+      {
+        "id": "cmj1xjvyk0000i6rgn7b9udj5",
+        "email": "stacykgriffin0@gmail.com",
+        "name": "Stacy",
+        "password": "[REDACTED]",
+        "role": "STUDENT",
+        "status": "APPROVED",
+        "isActive": true,
+        "rollNumber": "138",
+        "profileImage": null,
+        "gpa": 3.6,
+        "department": "CS",
+        "specialization": null,
+        "contactInfo": null,
+        "resetToken": "170875",
+        "resetTokenExpiry": "2025-12-11T22:26:32.151Z",
+        "createdAt": "2025-12-11T21:08:15.883Z",
+        "updatedAt": "2025-12-12T16:35:07.908Z",
+        "studentProfile": {
+          "id": "cmj1xjvzg0002i6rg5fad5byz",
+          "userId": "cmj1xjvyk0000i6rgn7b9udj5",
+          "semester": 1,
+          "batch": "2025",
+          "interests": null,
+          "skills": null,
+          "faculty": "FEST",
+          "session": "2021-2025",
+          "contactInfo": "03128901746",
+          "cgpa": 3.6,
+          "prerequisitesPassed": true,
+          "eligibilityStatus": "ELIGIBLE",
+          "transcriptUrl": null,
+          "unpassedCourses": null,
+          "policyAccepted": true,
+          "policyAcceptedAt": "2025-12-11T21:08:15.910Z",
+          "conditionalCommitment": null
+        },
+        "teacherProfile": null
+      },
+      {
+        "id": "cmj3aybe60000i694d9telwpn",
+        "email": "bellastewart279@gmail.com",
+        "name": "Bella",
+        "password": "[REDACTED]",
+        "role": "STUDENT",
+        "status": "APPROVED",
+        "isActive": true,
+        "rollNumber": null,
+        "profileImage": null,
+        "gpa": null,
+        "department": "CS",
+        "specialization": null,
+        "contactInfo": null,
+        "resetToken": null,
+        "resetTokenExpiry": null,
+        "createdAt": "2025-12-12T20:11:10.248Z",
+        "updatedAt": "2025-12-12T20:11:10.248Z",
+        "studentProfile": null,
+        "teacherProfile": null
+      }
+    ],
+    "projects": [
+      {
+        "id": "cmj1qw0m70006i66ctgzu39uf",
+        "title": "ARDUINO ROBOT",
+        "description": "Hey there! Loved your latest release. Are you planning anything behind the scenes you can share?",
+        "requirements": "IR sensor, Arduino card, Lead, Human efforts",
+        "status": "PROPOSED",
+        "teacherId": "cmj1qqs7q0000i66cyuu29pqv",
+        "supervisorId": null,
+        "groupId": null,
+        "isFacultyProposed": false,
+        "domain": null,
+        "objectives": null,
+        "abstract": null,
+        "tools": null,
+        "proposalDocument": null,
+        "createdAt": "2025-12-11T18:01:44.474Z",
+        "updatedAt": "2025-12-11T18:01:44.474Z",
+        "supervisor": null,
+        "teacher": {
+          "name": "Emily",
+          "email": "emilydaphne01@gmail.com"
+        },
+        "group": null,
+        "submissions": []
+      }
+    ],
+    "notifications": [
+      {
+        "id": "cmj1qsntw0004i66c8uh0gzeq",
+        "userId": "cmj1qqs7q0000i66cyuu29pqv",
+        "title": "Account Approved",
+        "message": "Your account has been approved. You can now access all features.",
+        "type": "success",
+        "isRead": false,
+        "relatedId": "approval",
+        "createdAt": "2025-12-11T17:59:07.940Z"
+      },
+      {
+        "id": "cmj1yut220003i63wdnpnmugh",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Group Invitation",
+        "message": "Erika  has invited you to join group \"your group\"",
+        "type": "info",
+        "isRead": true,
+        "relatedId": "/student?section=group",
+        "createdAt": "2025-12-11T21:44:44.954Z"
+      },
+      {
+        "id": "cmj1yut2p0005i63wyj7jmcwc",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "title": "Group Request Sent",
+        "message": "Your group request has been sent to Lucas",
+        "type": "INFO",
+        "isRead": true,
+        "relatedId": "REQUEST",
+        "createdAt": "2025-12-11T21:44:44.977Z"
+      },
+      {
+        "id": "cmj20039u0001i6xc06eqi7vi",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Group Request Cancelled",
+        "message": "Erika  has cancelled their group request.",
+        "type": "REQUEST",
+        "isRead": true,
+        "relatedId": "REQUEST",
+        "createdAt": "2025-12-11T22:16:51.087Z"
+      },
+      {
+        "id": "cmj2005tf0005i6xcj1xfefbk",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Group Invitation",
+        "message": "Erika  has invited you to join group \"your group\"",
+        "type": "GROUP",
+        "isRead": true,
+        "relatedId": "/student?section=group",
+        "createdAt": "2025-12-11T22:16:54.387Z"
+      },
+      {
+        "id": "cmj2005tw0007i6xcm8e0t8yl",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "title": "Group Request Sent",
+        "message": "Your group request has been sent to Lucas",
+        "type": "REQUEST",
+        "isRead": false,
+        "relatedId": "REQUEST",
+        "createdAt": "2025-12-11T22:16:54.404Z"
+      },
+      {
+        "id": "cmj20qcoy0001i6lspl3z36ic",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "title": "Invitation Accepted",
+        "message": "Lucas has accepted your invitation to join \"your group\"",
+        "type": "GROUP",
+        "isRead": false,
+        "relatedId": "group",
+        "createdAt": "2025-12-11T22:37:16.352Z"
+      },
+      {
+        "id": "cmj211g570003i6s8opimqbad",
+        "userId": "cmj1xjvyk0000i6rgn7b9udj5",
+        "title": "Group Invitation",
+        "message": "Erika  has invited you to join group \"your group\"",
+        "type": "GROUP",
+        "isRead": true,
+        "relatedId": "/student?section=group",
+        "createdAt": "2025-12-11T22:45:54.043Z"
+      },
+      {
+        "id": "cmj211g5y0005i6s8qr7oio72",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "title": "Group Request Sent",
+        "message": "Your group request has been sent to Stacy",
+        "type": "REQUEST",
+        "isRead": false,
+        "relatedId": "REQUEST",
+        "createdAt": "2025-12-11T22:45:54.070Z"
+      },
+      {
+        "id": "cmj211wmx0007i6s86nqqbrmx",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "title": "Invitation Accepted",
+        "message": "Stacy has accepted your invitation to join \"your group\"",
+        "type": "GROUP",
+        "isRead": false,
+        "relatedId": "group",
+        "createdAt": "2025-12-11T22:46:15.417Z"
+      },
+      {
+        "id": "cmj212lnz000bi6s8rcaq23yf",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "title": "Group Approved",
+        "message": "Your group \"Group Erika  & Lucas\" has been approved by the committee.",
+        "type": "GROUP",
+        "isRead": false,
+        "relatedId": "GROUP",
+        "createdAt": "2025-12-11T22:46:47.856Z"
+      },
+      {
+        "id": "cmj212lou000di6s8m35gabqv",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Group Approved",
+        "message": "Your group \"Group Erika  & Lucas\" has been approved by the committee.",
+        "type": "GROUP",
+        "isRead": true,
+        "relatedId": "GROUP",
+        "createdAt": "2025-12-11T22:46:47.887Z"
+      },
+      {
+        "id": "cmj212lph000fi6s8fnjh90wx",
+        "userId": "cmj1xjvyk0000i6rgn7b9udj5",
+        "title": "Group Approved",
+        "message": "Your group \"Group Erika  & Lucas\" has been approved by the committee.",
+        "type": "GROUP",
+        "isRead": true,
+        "relatedId": "GROUP",
+        "createdAt": "2025-12-11T22:46:47.910Z"
+      },
+      {
+        "id": "cmj21c6fi000ji6s8sw3ef8li",
+        "userId": "cmj1qqs7q0000i66cyuu29pqv",
+        "title": "New Supervision Request",
+        "message": "Lucas has requested your supervision for \"a project\"",
+        "type": "SUPERVISION",
+        "isRead": false,
+        "relatedId": "/teacher?section=supervision",
+        "createdAt": "2025-12-11T22:54:14.671Z"
+      },
+      {
+        "id": "cmj21c6g3000li6s873p2oqft",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Supervision Request Sent",
+        "message": "Your supervision request has been sent to Emily",
+        "type": "REQUEST",
+        "isRead": true,
+        "relatedId": "REQUEST",
+        "createdAt": "2025-12-11T22:54:14.691Z"
+      },
+      {
+        "id": "cmj21d1q0000ni6s8dw6b4u9p",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Supervision Request Accepted",
+        "message": "Emily has accepted your supervision request!",
+        "type": "SUPERVISION",
+        "isRead": true,
+        "relatedId": "supervision",
+        "createdAt": "2025-12-11T22:54:55.224Z"
+      },
+      {
+        "id": "cmj21e5gp000pi6s8trmolm1h",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "title": "Member Left Group",
+        "message": "Stacy has left the group \"Alpha\".",
+        "type": "GROUP",
+        "isRead": false,
+        "relatedId": "GROUP",
+        "createdAt": "2025-12-11T22:55:46.728Z"
+      },
+      {
+        "id": "cmj21e5h8000ri6s8hrpebjt6",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Member Left Group",
+        "message": "Stacy has left the group \"Alpha\".",
+        "type": "GROUP",
+        "isRead": true,
+        "relatedId": "GROUP",
+        "createdAt": "2025-12-11T22:55:46.748Z"
+      },
+      {
+        "id": "cmj21efpf000vi6s8wp3bcge1",
+        "userId": "cmj1xjvyk0000i6rgn7b9udj5",
+        "title": "Group Invitation",
+        "message": "Erika  has invited you to join group \"your group\"",
+        "type": "GROUP",
+        "isRead": true,
+        "relatedId": "/student?section=group",
+        "createdAt": "2025-12-11T22:56:00.003Z"
+      },
+      {
+        "id": "cmj21efqu000xi6s83cohyh78",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "title": "Group Request Sent",
+        "message": "Your group request has been sent to Stacy",
+        "type": "REQUEST",
+        "isRead": false,
+        "relatedId": "REQUEST",
+        "createdAt": "2025-12-11T22:56:00.054Z"
+      },
+      {
+        "id": "cmj21eolh000zi6s8hztdzrzz",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "title": "Invitation Accepted",
+        "message": "Stacy has accepted your invitation to join \"your group\"",
+        "type": "GROUP",
+        "isRead": false,
+        "relatedId": "group",
+        "createdAt": "2025-12-11T22:56:11.525Z"
+      },
+      {
+        "id": "cmj24xm3d0002i6p4qty65dz3",
+        "userId": "cmj1ovbq80000i6ognh2d7t5b",
+        "title": "New File Uploaded",
+        "message": "Lucas uploaded \"Doc1.pdf\" for project \"a project\"",
+        "type": "FILE",
+        "isRead": false,
+        "relatedId": "/admin?section=files",
+        "createdAt": "2025-12-12T00:34:53.592Z"
+      },
+      {
+        "id": "cmj24xm3d0003i6p48ruxe7hw",
+        "userId": "cmj1ovc670004i6ogcnd38pf9",
+        "title": "New File Uploaded",
+        "message": "Lucas uploaded \"Doc1.pdf\" for project \"a project\"",
+        "type": "FILE",
+        "isRead": false,
+        "relatedId": "/committee-head?section=files",
+        "createdAt": "2025-12-12T00:34:53.589Z"
+      },
+      {
+        "id": "cmj25hina0002i6nc4v3v7qz5",
+        "userId": "cmj1ovbq80000i6ognh2d7t5b",
+        "title": "New File Uploaded",
+        "message": "Lucas uploaded \"Doc1.pdf\" for project \"a project\"",
+        "type": "FILE",
+        "isRead": false,
+        "relatedId": "/admin?section=files",
+        "createdAt": "2025-12-12T00:50:22.242Z"
+      },
+      {
+        "id": "cmj25hina0003i6ncximsj1uf",
+        "userId": "cmj1ovc670004i6ogcnd38pf9",
+        "title": "New File Uploaded",
+        "message": "Lucas uploaded \"Doc1.pdf\" for project \"a project\"",
+        "type": "FILE",
+        "isRead": false,
+        "relatedId": "/committee-head?section=files",
+        "createdAt": "2025-12-12T00:50:22.245Z"
+      },
+      {
+        "id": "cmj25o1ez0002i6y40d7jivay",
+        "userId": "cmj1ovbq80000i6ognh2d7t5b",
+        "title": "New File Uploaded",
+        "message": "Lucas uploaded \"Doc1.pdf\" for project \"a project\"",
+        "type": "FILE",
+        "isRead": false,
+        "relatedId": "/admin?section=files",
+        "createdAt": "2025-12-12T00:55:26.507Z"
+      },
+      {
+        "id": "cmj25o1ez0003i6y49lznltxp",
+        "userId": "cmj1ovc670004i6ogcnd38pf9",
+        "title": "New File Uploaded",
+        "message": "Lucas uploaded \"Doc1.pdf\" for project \"a project\"",
+        "type": "FILE",
+        "isRead": false,
+        "relatedId": "/committee-head?section=files",
+        "createdAt": "2025-12-12T00:55:26.505Z"
+      },
+      {
+        "id": "cmj26byvz0001i6wkq8gcozbt",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Proof Submission Approved",
+        "message": "Your proof submission has been approved. You are now eligible to continue.",
+        "type": "PROOF_APPROVED",
+        "isRead": true,
+        "relatedId": null,
+        "createdAt": "2025-12-12T01:14:02.973Z"
+      },
+      {
+        "id": "cmj31cwi30001i6towxc0hx6f",
+        "userId": "cmj1xjvyk0000i6rgn7b9udj5",
+        "title": "Account Deactivated",
+        "message": "Your account has been deactivated by the administrator. Please contact support for more information.",
+        "type": "SYSTEM",
+        "isRead": true,
+        "relatedId": "SYSTEM",
+        "createdAt": "2025-12-12T15:42:34.631Z"
+      },
+      {
+        "id": "cmj31cwi70003i6tor8hewncg",
+        "userId": "cmj1xjvyk0000i6rgn7b9udj5",
+        "title": "Account Deactivated",
+        "message": "Your account has been deactivated by the administrator. Please contact support for more information.",
+        "type": "SYSTEM",
+        "isRead": true,
+        "relatedId": "SYSTEM",
+        "createdAt": "2025-12-12T15:42:34.639Z"
+      },
+      {
+        "id": "cmj32c16t0001i6g0gzk2whi1",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Account Deactivated",
+        "message": "Your account has been deactivated by the administrator. Please contact support for more information.",
+        "type": "SYSTEM",
+        "isRead": true,
+        "relatedId": "SYSTEM",
+        "createdAt": "2025-12-12T16:09:53.667Z"
+      },
+      {
+        "id": "cmj338hlu0001i6po8t37q1ft",
+        "userId": "cmj1xjvyk0000i6rgn7b9udj5",
+        "title": "Account Activated",
+        "message": "Your account has been activated by the administrator. You can now access the system.",
+        "type": "SYSTEM",
+        "isRead": true,
+        "relatedId": "SYSTEM",
+        "createdAt": "2025-12-12T16:35:07.936Z"
+      },
+      {
+        "id": "cmj338jhh0003i6po272rhaed",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "title": "Account Activated",
+        "message": "Your account has been activated by the administrator. You can now access the system.",
+        "type": "SYSTEM",
+        "isRead": true,
+        "relatedId": "SYSTEM",
+        "createdAt": "2025-12-12T16:35:10.373Z"
+      }
+    ],
+    "groups": [
+      {
+        "id": "cmj20qcpn0002i6ls084edmmv",
+        "name": "Alpha",
+        "description": "FYP Project Group",
+        "maxMembers": 4,
+        "isActive": true,
+        "isApproved": true,
+        "approvedBy": "cmj1ovbq80000i6ognh2d7t5b",
+        "approvedAt": "2025-12-11T22:46:47.815Z",
+        "createdAt": "2025-12-11T22:37:16.379Z",
+        "updatedAt": "2025-12-11T22:56:11.597Z"
+      }
+    ],
+    "groupMembers": [
+      {
+        "id": "cmj20qcpx0003i6lshj5put0v",
+        "groupId": "cmj20qcpn0002i6ls084edmmv",
+        "userId": "cmj1ovcai0005i6oge677r1l9",
+        "role": "LEADER",
+        "joinedAt": "2025-12-11T22:37:16.390Z",
+        "user": {
+          "name": "Erika ",
+          "email": "erikapayne.us@gmail.com"
+        },
+        "group": {
+          "name": "Alpha"
+        }
+      },
+      {
+        "id": "cmj20qcpx0004i6lshp42zl4n",
+        "groupId": "cmj20qcpn0002i6ls084edmmv",
+        "userId": "cmj1pjsnh0000i6f4siepounu",
+        "role": "MEMBER",
+        "joinedAt": "2025-12-11T22:37:16.390Z",
+        "user": {
+          "name": "Lucas",
+          "email": "01lucasmorgan@gmail.com"
+        },
+        "group": {
+          "name": "Alpha"
+        }
+      },
+      {
+        "id": "cmj21eomn0011i6s8cxveha97",
+        "groupId": "cmj20qcpn0002i6ls084edmmv",
+        "userId": "cmj1xjvyk0000i6rgn7b9udj5",
+        "role": "MEMBER",
+        "joinedAt": "2025-12-11T22:56:11.566Z",
+        "user": {
+          "name": "Stacy",
+          "email": "stacykgriffin0@gmail.com"
+        },
+        "group": {
+          "name": "Alpha"
+        }
+      }
+    ],
+    "groupRequests": [
+      {
+        "id": "cmj2005sx0003i6xcpmnqvlgd",
+        "fromUserId": "cmj1ovcai0005i6oge677r1l9",
+        "toUserId": "cmj1pjsnh0000i6f4siepounu",
+        "groupId": null,
+        "message": "Hi! I would like to team up with you for the FYP project.",
+        "groupName": null,
+        "status": "ACCEPTED",
+        "createdAt": "2025-12-11T22:16:54.369Z",
+        "updatedAt": "2025-12-11T22:37:16.316Z",
+        "fromUser": {
+          "name": "Erika ",
+          "email": "erikapayne.us@gmail.com"
+        },
+        "toUser": {
+          "name": "Lucas",
+          "email": "01lucasmorgan@gmail.com"
+        }
+      },
+      {
+        "id": "cmj21efor000ti6s8hyaw5dus",
+        "fromUserId": "cmj1ovcai0005i6oge677r1l9",
+        "toUserId": "cmj1xjvyk0000i6rgn7b9udj5",
+        "groupId": null,
+        "message": "Hi! I would like to team up with you for the FYP project.",
+        "groupName": null,
+        "status": "ACCEPTED",
+        "createdAt": "2025-12-11T22:55:59.979Z",
+        "updatedAt": "2025-12-11T22:56:11.508Z",
+        "fromUser": {
+          "name": "Erika ",
+          "email": "erikapayne.us@gmail.com"
+        },
+        "toUser": {
+          "name": "Stacy",
+          "email": "stacykgriffin0@gmail.com"
+        }
+      }
+    ],
+    "supervisorRequests": [
+      {
+        "id": "cmj21c6eq000hi6s815um0hn4",
+        "studentId": "cmj1pjsnh0000i6f4siepounu",
+        "teacherId": "cmj1qqs7q0000i66cyuu29pqv",
+        "projectId": null,
+        "message": "I would like you to supervise my FYP project. Looking forward to working with you.",
+        "status": "ACCEPTED",
+        "createdAt": "2025-12-11T22:54:14.637Z",
+        "updatedAt": "2025-12-11T22:54:55.172Z",
+        "student": {
+          "name": "Lucas",
+          "email": "01lucasmorgan@gmail.com"
+        },
+        "teacher": {
+          "name": "Emily",
+          "email": "emilydaphne01@gmail.com"
+        }
+      }
+    ],
+    "messages": [
+      {
+        "id": "cmj1rftbt0004i6gw0o06b6rr",
+        "content": "Hey miss kesi hain?",
+        "senderId": "cmj1pjsnh0000i6f4siepounu",
+        "receiverId": "cmj1qqs7q0000i66cyuu29pqv",
+        "conversationId": "cmj1rfn1f0000i6gw89gtvrtr",
+        "isRead": false,
+        "fileUrl": null,
+        "fileName": null,
+        "fileType": null,
+        "fileSize": null,
+        "deletedAt": null,
+        "deletedBy": null,
+        "createdAt": "2025-12-11T18:17:08.153Z",
+        "sender": {
+          "name": "Lucas",
+          "email": "01lucasmorgan@gmail.com"
+        },
+        "receiver": {
+          "name": "Emily",
+          "email": "emilydaphne01@gmail.com"
+        }
+      }
+    ],
+    "conversations": [
+      {
+        "id": "cmj1rfn1f0000i6gw89gtvrtr",
+        "isGroup": false,
+        "groupName": null,
+        "groupImage": null,
+        "adminId": null,
+        "createdAt": "2025-12-11T18:17:00.002Z",
+        "updatedAt": "2025-12-11T18:17:00.002Z",
+        "participants": [
+          {
+            "id": "cmj1rfn1g0001i6gwjt4nn29p",
+            "conversationId": "cmj1rfn1f0000i6gw89gtvrtr",
+            "userId": "cmj1pjsnh0000i6f4siepounu",
+            "createdAt": "2025-12-11T18:17:00.002Z",
+            "user": {
+              "name": "Lucas",
+              "email": "01lucasmorgan@gmail.com"
+            }
+          },
+          {
+            "id": "cmj1rfn1g0002i6gwcrxi1erh",
+            "conversationId": "cmj1rfn1f0000i6gw89gtvrtr",
+            "userId": "cmj1qqs7q0000i66cyuu29pqv",
+            "createdAt": "2025-12-11T18:17:00.002Z",
+            "user": {
+              "name": "Emily",
+              "email": "emilydaphne01@gmail.com"
+            }
+          }
+        ]
+      }
+    ],
+    "meetings": []
+  },
+  "files": {
+    "committees": [
+      {
+        "id": "1",
+        "name": "Computer Science Committee",
+        "head": "Dr. Muhammad Ali",
+        "members": [
+          "Dr. Ayesha Khan",
+          "Prof. Bilal Ahmed",
+          "Dr. Sara Noor"
+        ],
+        "status": "Active",
+        "created": "2024-01-01"
+      },
+      {
+        "id": "1763996058854",
+        "name": "Software Engg Committee",
+        "head": "Prof.Atif ",
+        "members": [
+          "Sara",
+          "Muneeb",
+          "Bilal"
+        ],
+        "status": "Active",
+        "created": "2025-11-24"
+      }
+    ],
+    "fileMetadata": {},
+    "systemSettings": {
+      "general": {
+        "systemName": "FYP Automation System",
+        "universityName": "Hamdard University",
+        "contactEmail": "ahmedshayan928@gmail.com",
+        "maintenanceMode": false,
+        "allowRegistration": true
+      },
+      "security": {
+        "minPasswordLength": 8,
+        "sessionTimeout": 24,
+        "maxLoginAttempts": 5,
+        "requireEmailVerification": false,
+        "enableTwoFactor": false
+      },
+      "notifications": {
+        "emailNotifications": true,
+        "smsNotifications": false,
+        "pushNotifications": true,
+        "deadlineReminders": true,
+        "approvalNotifications": true
+      },
+      "backup": {
+        "automaticBackup": true,
+        "backupFrequency": "daily",
+        "retentionDays": 30
+      }
+    },
+    "loginAttempts": {
+      "admin@hamdard.edu": {
+        "attempts": 2,
+        "lastAttempt": 1765471973910
+      }
+    }
+  },
+  "statistics": {
+    "totalUsers": 8,
+    "totalProjects": 1,
+    "totalNotifications": 33,
+    "totalGroups": 1,
+    "totalMessages": 1,
+    "totalMeetings": 0,
+    "usersByRole": {
+      "students": 4,
+      "teachers": 2,
+      "admins": 1,
+      "committeeHeads": 1
+    }
+  }
+}

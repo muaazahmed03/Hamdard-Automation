@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1765929628259",
+    "name": "Comp SCI",
+    "head": "Dr. Committee Head",
+    "headId": "cmj1ovc670004i6ogcnd38pf9",
+    "faculty": "FEST",
+    "department": "",
+    "members": [
+      "Emily",
+      "Ashley "
+    ],
+    "memberIds": [
+      "cmj1qqs7q0000i66cyuu29pqv",
+      "cmj1ovbwu0001i6ogurvx4iuf"
+    ],
+    "status": "Active",
+    "created": "2025-12-17"
+  }
+]

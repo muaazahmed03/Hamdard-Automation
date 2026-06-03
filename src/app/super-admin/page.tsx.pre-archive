@@ -1,0 +1,11 @@
+'use client'
+
+import React from 'react'
+
+export default function SuperAdminCurrentBackup() {
+  return (
+    <div className="min-h-screen">
+      <h2>Backup of current super-admin page before replacing with archived admin page</h2>
+    </div>
+  )
+}

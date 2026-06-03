@@ -1,0 +1,17 @@
+{
+  "policies": [
+    {
+      "id": 1,
+      "version": "1.0",
+      "description": "Must read it Before registering yourself",
+      "fileName": "FYP Registeration Policy",
+      "fileUrl": "/uploads/policies/1765794632942_CS-FYP Policy Hamdard University (1).pdf",
+      "uploadedDate": "Dec 15, 2025",
+      "uploadedBy": "Super Admin",
+      "isActive": true,
+      "acknowledgments": 0,
+      "totalStudents": 0
+    }
+  ],
+  "acknowledgments": []
+}

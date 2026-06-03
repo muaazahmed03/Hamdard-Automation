@@ -1,0 +1,28 @@
+{
+  "general": {
+    "systemName": "FYP Automation System",
+    "universityName": "Hamdard University",
+    "contactEmail": "ahmedshayan928@gmail.com",
+    "maintenanceMode": false,
+    "allowRegistration": true
+  },
+  "security": {
+    "minPasswordLength": 8,
+    "sessionTimeout": 24,
+    "maxLoginAttempts": 5,
+    "requireEmailVerification": false,
+    "enableTwoFactor": false
+  },
+  "notifications": {
+    "emailNotifications": true,
+    "smsNotifications": false,
+    "pushNotifications": true,
+    "deadlineReminders": true,
+    "approvalNotifications": true
+  },
+  "backup": {
+    "automaticBackup": true,
+    "backupFrequency": "daily",
+    "retentionDays": 30
+  }
+}

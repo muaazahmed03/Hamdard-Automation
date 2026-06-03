@@ -1,0 +1,36 @@
+
+> nextjs_tailwind_shadcn_ts@0.1.0 build
+> next build
+
+   ▲ Next.js 15.3.5
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./src/app/api/admin/files/[id]/route.ts
+Module not found: Can't resolve '@/lib/prisma'
+
+https://nextjs.org/docs/messages/module-not-found
+
+./src/app/super-admin/page.tsx
+Error:   [31mx[0m Unexpected token `div`. Expected jsx identifier
+     ,-[[36;1;4mD:\fyp\src\app\super-admin\page.tsx[0m:872:1]
+ [2m869[0m |   }
+ [2m870[0m | 
+ [2m871[0m |   return (
+ [2m872[0m |     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100">
+     : [35;1m     ^^^[0m
+ [2m873[0m |       <div className="h-screen flex">
+ [2m874[0m | 
+ [2m875[0m |             {/* Manage Users Tab */}
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/super-admin/page.tsx
+
+
+> Build failed because of webpack errors

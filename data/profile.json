@@ -1,0 +1,29 @@
+{
+  "id": "current-user",
+  "name": "Saqib",
+  "email": "saqib123@gmail.com",
+  "rollNumber": "CS2021006",
+  "gpa": 3.7,
+  "department": "Computer Science",
+  "semester": 7,
+  "specialization": "Software Engineering",
+  "contactInfo": "03147805426",
+  "profileImage": {},
+  "studentProfile": {
+    "id": "profile1",
+    "semester": 6,
+    "batch": "2021-2025",
+    "interests": [
+      "Web Development",
+      "Machine Learning",
+      "Cloud Computing"
+    ],
+    "skills": [
+      "React",
+      "Node.js",
+      "Python",
+      "AWS",
+      "Docker"
+    ]
+  }
+}
