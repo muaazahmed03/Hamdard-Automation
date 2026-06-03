@@ -34,6 +34,7 @@ export default function RegisterPage() {
   const [policyAccepted, setPolicyAccepted] = useState(false);
   const [activePolicy, setActivePolicy] = useState<any>(null);
   const [loadingPolicy, setLoadingPolicy] = useState(false);
+  const [commitmentStatement, setCommitmentStatement] = useState('');
   const router = useRouter();
 
   // Ensure favicon on this page (some browsers may cache or ignore app metadata)
@@ -578,7 +579,7 @@ export default function RegisterPage() {
             </div>
           </CardContent>
         </Card>
-
+        </div>
       </div>
     </div>
   );
