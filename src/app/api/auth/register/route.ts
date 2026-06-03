@@ -126,31 +126,38 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate department against faculty departments
+    // Validate department against faculty departments (skip when no faculties seeded yet)
     if (validatedData.department) {
       const faculties = await db.faculty.findMany({
-        where: { isActive: true }
+        where: { isActive: true },
       });
-      
-      let departmentFound = false;
-      for (const faculty of faculties) {
-        if (faculty.departments) {
-          const facultyDepartments = faculty.departments
-            .split(',')
-            .map(dept => dept.trim().toLowerCase());
-          
-          if (facultyDepartments.includes(validatedData.department.toLowerCase())) {
-            departmentFound = true;
-            break;
+
+      if (faculties.length > 0) {
+        let departmentFound = false;
+        for (const faculty of faculties) {
+          if (faculty.departments) {
+            const facultyDepartments = faculty.departments
+              .split(',')
+              .map((dept) => dept.trim().toLowerCase());
+
+            if (
+              facultyDepartments.includes(validatedData.department!.toLowerCase())
+            ) {
+              departmentFound = true;
+              break;
+            }
           }
         }
-      }
-      
-      if (!departmentFound) {
-        return NextResponse.json(
-          { error: 'Department does not exist in any faculty. Please contact the administrator.' },
-          { status: 400 }
-        );
+
+        if (!departmentFound) {
+          return NextResponse.json(
+            {
+              error:
+                'Department does not exist in any faculty. Use e.g. Computer Science, Software Engineering, or Information Technology.',
+            },
+            { status: 400 }
+          );
+        }
       }
     }
 

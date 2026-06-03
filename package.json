@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "seed": "node --loader tsx prisma/seed.js",
+    "seed": "npx tsx prisma/seed.js",
     "dev": "nodemon --exec \"npx tsx server.ts\" --watch server.ts --watch src --ext ts,tsx,js,jsx",
     "dev:cmd": "cmd /c \"npx tsx server.ts\"",
     "build": "next build",
