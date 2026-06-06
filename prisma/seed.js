@@ -24,7 +24,7 @@ async function main() {
   const users = [
     {
       name: 'Admin (Super Admin)',
-      email: 'ahmedshayan928@gmail.com',
+      email: 'hasnainzaidi962@gmail.com',
       password: 'admin12345',
       role: 'ADMIN',
       status: 'APPROVED',

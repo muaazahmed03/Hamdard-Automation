@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { resolveProfileImageUrl } from '@/lib/profile-image-url';
 
 // GET /api/students/search - Search for students for group formation
 export async function GET(request: NextRequest) {
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
         batch: student.studentProfile?.batch || '',
         skills: student.studentProfile?.skills ? student.studentProfile.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
         interests: student.studentProfile?.interests ? student.studentProfile.interests.split(',').map(i => i.trim()).filter(Boolean) : [],
-        profileImage: student.profileImage,
+        profileImage: resolveProfileImageUrl(student.id, student.profileImage),
         isInGroup: !!activeGroup,
         currentGroup: activeGroup ? {
           id: activeGroup.group.id,

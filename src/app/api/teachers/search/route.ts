@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { resolveProfileImageUrl } from '@/lib/profile-image-url';
 
 // GET /api/teachers/search - Search for teachers/supervisors
 export async function GET(request: NextRequest) {
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
         designation: teacher.teacherProfile?.designation || 'Faculty',
         officeHours: teacher.teacherProfile?.officeHours || 'N/A',
         specialization: teacher.specialization || 'N/A',
-        profileImage: teacher.profileImage,
+        profileImage: resolveProfileImageUrl(teacher.id, teacher.profileImage),
         currentSupervising,
         maxSupervising,
         isAvailable: currentSupervising < maxSupervising,

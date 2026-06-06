@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { resolveProfileImageUrl } from '@/lib/profile-image-url';
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
       department: user.department,
       specialization: user.specialization,
       contactInfo: user.contactInfo,
-      profileImage: user.profileImage,
+      profileImage: resolveProfileImageUrl(user.id, user.profileImage),
     };
 
     if (user.studentProfile) {
@@ -88,8 +89,13 @@ export async function PUT(request: NextRequest) {
     if (updates.rollNumber !== undefined) updateData.rollNumber = updates.rollNumber;
     if (updates.gpa !== undefined) updateData.gpa = updates.gpa;
     if (updates.contactInfo !== undefined) updateData.contactInfo = updates.contactInfo;
-    if (updates.profileImage !== undefined) updateData.profileImage = updates.profileImage;
     if (updates.specialization !== undefined) updateData.specialization = updates.specialization;
+    if (updates.profileImage !== undefined) {
+      updateData.profileImage = updates.profileImage;
+      if (updates.profileImage === null) {
+        await db.userProfileImage.deleteMany({ where: { userId } });
+      }
+    }
 
     const updatedUser = await db.user.update({
       where: { id: userId },
@@ -147,7 +153,7 @@ export async function PUT(request: NextRequest) {
       department: updatedUser.department,
       specialization: updatedUser.specialization,
       contactInfo: updatedUser.contactInfo,
-      profileImage: updatedUser.profileImage,
+      profileImage: resolveProfileImageUrl(updatedUser.id, updatedUser.profileImage),
     };
 
     if (updatedUser.studentProfile) {

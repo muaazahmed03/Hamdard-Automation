@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "seed": "npx tsx prisma/seed.js",
+    "update-admin-email": "node scripts/update-admin-email.js",
     "dev": "nodemon --exec \"npx tsx server.ts\" --watch server.ts --watch src --ext ts,tsx,js,jsx",
     "dev:cmd": "cmd /c \"npx tsx server.ts\"",
     "build": "next build",

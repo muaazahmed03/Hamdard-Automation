@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { resolveProfileImageUrl } from '@/lib/profile-image-url';
 
 // GET /api/messages/conversations - Get current user's conversations
 export async function GET(request: NextRequest) {
@@ -111,7 +112,10 @@ export async function GET(request: NextRequest) {
         lastMessageTime: lastMessage?.createdAt || conversation.createdAt,
         unreadCount: unreadCount,
         isOnline: true, // Will be updated via socket presence events
-        profileImage: otherParticipant?.user?.profileImage || null,
+        profileImage: resolveProfileImageUrl(
+          otherParticipant?.user?.id,
+          otherParticipant?.user?.profileImage || null,
+        ),
       };
     });
 
