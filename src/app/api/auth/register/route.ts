@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { validatePassword, getSystemSettings } from '@/lib/security';
 import { sendWelcomeEmail } from '@/lib/email';
+import { isValidAccessPass } from '@/lib/access-passes';
 
 const registerSchema = z.object({
   name: z.string().min(2),
@@ -84,16 +85,9 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      // Simple access pass validation (in production, this should be more secure)
-      const validAccessPasses = {
-        'ADMIN': 'ADMIN@2024',
-        'COMMITTEE_HEAD': 'COMMITTEE@2024',
-        'TEACHER': 'TEACHER@2024'
-      };
-      
-      if (validatedData.accessPass !== validAccessPasses[validatedData.role as keyof typeof validAccessPasses]) {
+      if (!isValidAccessPass(validatedData.role, validatedData.accessPass)) {
         return NextResponse.json(
-          { error: 'Invalid access pass. Use: ' + validAccessPasses[validatedData.role as keyof typeof validAccessPasses] },
+          { error: 'Invalid access pass. Please contact the administrator.' },
           { status: 400 }
         );
       }
@@ -126,15 +120,60 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate department against faculty departments (skip when no faculties seeded yet)
-    if (validatedData.department) {
-      const faculties = await db.faculty.findMany({
-        where: { isActive: true },
-      });
+    // Validate faculty and department selection (skip when no faculties seeded yet)
+    const activeFaculties = await db.faculty.findMany({
+      where: { isActive: true },
+    });
 
-      if (faculties.length > 0) {
+    if (activeFaculties.length > 0) {
+      const needsFacultySelection = ['STUDENT', 'TEACHER', 'COMMITTEE_HEAD'].includes(
+        validatedData.role,
+      );
+
+      if (needsFacultySelection && !validatedData.faculty?.trim()) {
+        return NextResponse.json(
+          { error: 'Please select a faculty' },
+          { status: 400 },
+        );
+      }
+
+      if (needsFacultySelection && !validatedData.department?.trim()) {
+        return NextResponse.json(
+          { error: 'Please select a department' },
+          { status: 400 },
+        );
+      }
+
+      if (validatedData.faculty) {
+        const matchingFaculty = activeFaculties.find(
+          (faculty) =>
+            faculty.name.toLowerCase() === validatedData.faculty!.trim().toLowerCase(),
+        );
+
+        if (!matchingFaculty) {
+          return NextResponse.json(
+            { error: 'Selected faculty does not exist' },
+            { status: 400 },
+          );
+        }
+
+        if (validatedData.department && matchingFaculty.departments) {
+          const facultyDepartments = matchingFaculty.departments
+            .split(',')
+            .map((dept) => dept.trim().toLowerCase());
+
+          if (
+            !facultyDepartments.includes(validatedData.department.trim().toLowerCase())
+          ) {
+            return NextResponse.json(
+              { error: 'Selected department is not available in this faculty' },
+              { status: 400 },
+            );
+          }
+        }
+      } else if (validatedData.department) {
         let departmentFound = false;
-        for (const faculty of faculties) {
+        for (const faculty of activeFaculties) {
           if (faculty.departments) {
             const facultyDepartments = faculty.departments
               .split(',')
@@ -151,11 +190,8 @@ export async function POST(request: NextRequest) {
 
         if (!departmentFound) {
           return NextResponse.json(
-            {
-              error:
-                'Department does not exist in any faculty. Use e.g. Computer Science, Software Engineering, or Information Technology.',
-            },
-            { status: 400 }
+            { error: 'Selected department does not exist' },
+            { status: 400 },
           );
         }
       }
@@ -164,35 +200,18 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-    // Create user
-    // Requirement: allow immediate login for all roles right after registration.
-    const autoApprovedRoles: Array<'ADMIN' | 'COMMITTEE_HEAD' | 'TEACHER'> = [
-      'ADMIN',
-      'COMMITTEE_HEAD',
-      'TEACHER',
-    ];
-    
-    // Eligibility check for students
+    // Eligibility check for students; all self-registrations stay pending until approval.
     let eligibilityStatus: 'ELIGIBLE' | 'CONDITIONAL' | 'INELIGIBLE' = 'ELIGIBLE';
     let userStatus: 'PENDING' | 'APPROVED' | 'CONDITIONALLY_REGISTERED' = 'PENDING';
-    
+
     if (validatedData.role === 'STUDENT') {
       const cgpa = validatedData.cgpa || 0;
-      
-      // NEW RULE: Students with GPA >= 3.0 are auto-approved
-      // Students with GPA < 3.0 require admin approval
-      if (cgpa >= 3.0) {
-        eligibilityStatus = 'ELIGIBLE';
-        userStatus = 'APPROVED';
-      } else {
-        // GPA < 3.0 gets conditional status but can still proceed.
-        eligibilityStatus = 'CONDITIONAL';
-        userStatus = 'CONDITIONALLY_REGISTERED';
-      }
+      eligibilityStatus = cgpa >= 3.0 ? 'ELIGIBLE' : 'CONDITIONAL';
+      userStatus = 'PENDING';
+    } else if (validatedData.role === 'ADMIN') {
+      userStatus = 'APPROVED';
     } else {
-      userStatus = autoApprovedRoles.includes(validatedData.role as (typeof autoApprovedRoles)[number]) 
-        ? 'APPROVED' 
-        : 'PENDING';
+      userStatus = 'PENDING';
     }
 
     const userData: any = {
@@ -267,13 +286,20 @@ export async function POST(request: NextRequest) {
           conditionalCommitment: validatedData.conditionalCommitment,
         },
       });
-    } else if (validatedData.role === 'TEACHER') {
+    } else if (
+      validatedData.role === 'TEACHER' ||
+      validatedData.role === 'COMMITTEE_HEAD'
+    ) {
       await db.teacherProfile.create({
         data: {
           userId: user.id,
           employeeId: `EMP${Date.now()}`,
-          designation: 'Faculty Member',
+          designation:
+            validatedData.role === 'COMMITTEE_HEAD'
+              ? 'Committee Head'
+              : 'Faculty Member',
           officeHours: '9:00 AM - 5:00 PM',
+          faculty: validatedData.faculty,
         },
       });
     }

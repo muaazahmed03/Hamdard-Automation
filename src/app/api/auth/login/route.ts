@@ -100,8 +100,18 @@ export async function POST(request: NextRequest) {
     if (user.status === 'PENDING') {
       return NextResponse.json(
         { 
-          error: 'Your registration is pending approval. Please wait for admin approval to access your portal.',
+          error: 'Your registration is pending approval. Please wait for admin or committee approval to access your portal.',
           status: 'PENDING'
+        },
+        { status: 403 }
+      );
+    }
+
+    if (user.status === 'CONDITIONALLY_REGISTERED') {
+      return NextResponse.json(
+        {
+          error: 'Your registration is pending approval. Please wait for admin or committee approval to access your portal.',
+          status: 'CONDITIONALLY_REGISTERED'
         },
         { status: 403 }
       );

@@ -26,7 +26,12 @@ const defaultSettings = {
     sessionTimeout: 24,
     maxLoginAttempts: 5,
     requireEmailVerification: false,
-    enableTwoFactor: false
+    enableTwoFactor: false,
+    accessPasses: {
+      ADMIN: 'ADMIN@2024',
+      COMMITTEE_HEAD: 'COMMITTEE@2024',
+      TEACHER: 'TEACHER@2024',
+    },
   },
   notifications: {
     emailNotifications: true,

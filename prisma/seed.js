@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const DEPARTMENTS =
-  'Computer Science, Software Engineering, Information Technology, Data Science, Cyber Security';
+  'Computer Science, Software Engineering, Artificial Intelligence, Information Technology, Data Science, Cyber Security';
 
 async function main() {
   console.log('🌱 Seeding faculties and demo users...');

@@ -397,11 +397,7 @@ export default function RegisterPage() {
                         id="accessPass"
                         name="accessPass"
                         type="text"
-                        placeholder={
-                          formData.role === 'TEACHER' ? 'TEACHER@2024' :
-                          formData.role === 'COMMITTEE_HEAD' ? 'COMMITTEE@2024' :
-                          'ADMIN@2024'
-                        }
+                        placeholder="Enter access pass"
                         value={formData.accessPass}
                         onChange={handleChange}
                         required
@@ -409,9 +405,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <p className="text-xs text-gray-500">
-                      {formData.role === 'ADMIN' && 'Use: ADMIN@2024'}
-                      {formData.role === 'TEACHER' && 'Use: TEACHER@2024'}
-                      {formData.role === 'COMMITTEE_HEAD' && 'Use: COMMITTEE@2024'}
+                      Contact the administrator to obtain your access pass.
                     </p>
                   </div>
                 )}
