@@ -21,9 +21,9 @@ export async function GET(request: NextRequest) {
 
     let supervisionRequests;
 
-    // If teacher, get requests sent TO them
+    // If teacher, get requests sent TO them (with group + proposal context)
     if (userRole === 'TEACHER') {
-      supervisionRequests = await db.supervisorRequest.findMany({
+      const rawRequests = await db.supervisorRequest.findMany({
         where: {
           teacherId: userId,
         },
@@ -50,12 +50,105 @@ export async function GET(request: NextRequest) {
               id: true,
               title: true,
               description: true,
+              requirements: true,
+              proposalDocument: true,
             },
           },
         },
         orderBy: {
           createdAt: 'desc',
         },
+      });
+
+      const studentIds = rawRequests.map((req) => req.studentId);
+      const groupMembers = studentIds.length
+        ? await db.groupMember.findMany({
+            where: { userId: { in: studentIds } },
+            include: {
+              group: {
+                include: {
+                  members: {
+                    include: {
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          email: true,
+                          rollNumber: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          })
+        : [];
+
+      const proposals = studentIds.length
+        ? await db.projectSubmission.findMany({
+            where: {
+              studentId: { in: studentIds },
+              fileType: 'PROPOSAL',
+            },
+            orderBy: { createdAt: 'desc' },
+          })
+        : [];
+
+      const groupByStudent = new Map(
+        groupMembers.map((member) => [member.userId, member.group]),
+      );
+      const proposalByStudent = new Map<string, (typeof proposals)[0]>();
+      for (const proposal of proposals) {
+        if (!proposalByStudent.has(proposal.studentId)) {
+          proposalByStudent.set(proposal.studentId, proposal);
+        }
+      }
+
+      supervisionRequests = rawRequests.map((req) => {
+        const group = groupByStudent.get(req.studentId);
+        const members =
+          group?.members.map((member) => ({
+            id: member.user.id,
+            name: member.user.name,
+            email: member.user.email,
+            rollNumber: member.user.rollNumber,
+            role: member.role,
+          })) ?? [];
+        const leader =
+          members.find((member) => member.role?.toUpperCase() === 'LEADER') ??
+          members[0] ??
+          null;
+        const proposal = proposalByStudent.get(req.studentId);
+
+        return {
+          ...req,
+          group: group
+            ? {
+                id: group.id,
+                name: group.name,
+                leader,
+                members,
+              }
+            : null,
+          proposalFile: proposal
+            ? {
+                id: proposal.id,
+                fileName: proposal.fileName,
+                fileUrl: proposal.fileUrl,
+                status: proposal.status,
+                supervisorApprovalStatus: proposal.supervisorApprovalStatus,
+              }
+            : req.project?.proposalDocument
+              ? {
+                  id: req.project.id,
+                  fileName: 'Proposal Document',
+                  fileUrl: req.project.proposalDocument,
+                  status: req.status,
+                  supervisorApprovalStatus: 'PENDING',
+                }
+              : null,
+        };
       });
     } else {
       // If student, get requests sent BY them or any group member

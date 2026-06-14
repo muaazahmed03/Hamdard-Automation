@@ -14,11 +14,11 @@ export async function GET(request: Request) {
     }
 
     // Get all groups where this teacher is the supervisor (via project link OR accepted supervisor request)
-    // First, find all students who have accepted supervisor requests from this teacher
-    const acceptedSupervisorRequests = await prisma.supervisorRequest.findMany({
+    // Students with accepted OR pending requests to this teacher (for proposal review)
+    const supervisorRequests = await prisma.supervisorRequest.findMany({
       where: {
         teacherId: teacherId,
-        status: 'ACCEPTED'
+        status: { in: ['ACCEPTED', 'PENDING'] },
       },
       include: {
         student: {
@@ -27,7 +27,10 @@ export async function GET(request: Request) {
       }
     });
     
-    const supervisedStudentIds = acceptedSupervisorRequests.map(req => req.student.id);
+    const supervisedStudentIds = supervisorRequests.map(req => req.student.id);
+    const pendingStudentIds = supervisorRequests
+      .filter((req) => req.status === 'PENDING')
+      .map((req) => req.student.id);
     
     // Get groups where this teacher is the supervisor (via project link)
     const supervisedGroups = await prisma.group.findMany({
@@ -148,18 +151,17 @@ export async function GET(request: Request) {
         group.members.some(member => member.userId === submission.studentId)
       );
 
-      // Check if student has an accepted supervisor request (even if not in a supervised group yet)
-      const hasAcceptedRequest = supervisedStudentIds.includes(submission.studentId);
+      // Add if student is in a supervised group OR has a supervisor request to this teacher
+      const hasSupervisorRequest = supervisedStudentIds.includes(submission.studentId);
 
-      // Add if student is in a supervised group OR has an accepted supervisor request
-      if (studentGroup || hasAcceptedRequest) {
+      if (studentGroup || hasSupervisorRequest) {
         // If student is in a group, use that group info
         // Otherwise, try to find the student's group
         let groupName = studentGroup?.name || 'No Group';
         let groupId = studentGroup?.id || null;
 
         // If no group found but student has accepted request, try to find their group
-        if (!studentGroup && hasAcceptedRequest) {
+        if (!studentGroup && hasSupervisorRequest) {
           const studentGroupMember = await prisma.groupMember.findFirst({
             where: { userId: submission.studentId },
             include: {

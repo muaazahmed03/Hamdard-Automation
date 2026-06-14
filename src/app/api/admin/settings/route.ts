@@ -1,4 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
+
+const SETTINGS_FILE = path.join(process.cwd(), 'data', 'system-settings.json');
+
+function getSettingsFromFile() {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
+    }
+  } catch (error) {
+    console.error('Error reading settings file:', error);
+  }
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,12 +39,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // In a real application, you would fetch these from a database
-    const settings = {
+    const fromFile = getSettingsFromFile();
+    const settings = fromFile ?? {
       general: {
         systemName: 'FYP Automation System',
         universityName: 'Hamdard University',
-        contactEmail: 'admin@hamdard.edu.pk',
+        contactEmail: 'hasnainzaidi962@gmail.com',
         maintenanceMode: false,
         allowRegistration: true
       },
@@ -54,12 +69,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(settings)
+    return NextResponse.json(settings);
   } catch (error) {
-    console.error('Settings fetch error:', error)
+    console.error('Settings fetch error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch settings' },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
