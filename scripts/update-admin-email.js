@@ -1,15 +1,36 @@
 /**
- * One-time script: update super admin email in the database.
+ * One-time script: update super admin email in DB + contact email in settings.
  * Run from fypFinal: node scripts/update-admin-email.js
  */
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
 const OLD_EMAIL = 'ahmedshayan928@gmail.com';
 const NEW_EMAIL = 'hasnainzaidi962@gmail.com';
 const ADMIN_PASSWORD = 'admin12345';
+const SETTINGS_FILE = path.join(process.cwd(), 'data', 'system-settings.json');
+
+function updateContactEmailInSettings() {
+  try {
+    if (!fs.existsSync(SETTINGS_FILE)) {
+      console.log('⚠ system-settings.json not found — skipped contact email update');
+      return;
+    }
+    const settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
+    if (!settings.general) {
+      settings.general = {};
+    }
+    settings.general.contactEmail = NEW_EMAIL;
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+    console.log(`✓ Contact email in settings → ${NEW_EMAIL}`);
+  } catch (e) {
+    console.error('Failed to update system-settings.json:', e);
+  }
+}
 
 async function main() {
   const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
@@ -57,6 +78,8 @@ async function main() {
       console.log(`✓ Created admin ${NEW_EMAIL} / ${ADMIN_PASSWORD}`);
     }
   }
+
+  updateContactEmailInSettings();
 }
 
 main()

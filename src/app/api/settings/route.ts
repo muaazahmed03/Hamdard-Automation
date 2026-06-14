@@ -17,7 +17,7 @@ const defaultSettings = {
   general: {
     systemName: 'FYP Automation System',
     universityName: 'Hamdard University',
-    contactEmail: 'ahmedshayan928@gmail.com',
+    contactEmail: 'hasnainzaidi962@gmail.com',
     maintenanceMode: false,
     allowRegistration: true
   },

@@ -2,24 +2,40 @@ import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 
-// Get admin email from system settings
+const DEFAULT_CONTACT_EMAIL = 'hasnainzaidi962@gmail.com';
+
+// Get admin / support contact email from env or system settings
 function getAdminEmail(): string {
+  if (process.env.CONTACT_EMAIL?.trim()) {
+    return process.env.CONTACT_EMAIL.trim();
+  }
+  if (process.env.SUPER_ADMIN_EMAIL?.trim()) {
+    return process.env.SUPER_ADMIN_EMAIL.trim();
+  }
+
   try {
     const settingsPath = path.join(process.cwd(), 'data', 'system-settings.json');
     if (fs.existsSync(settingsPath)) {
       const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-      return settings.general?.contactEmail || 'ahmedshayan928@gmail.com';
+      const fromSettings = settings.general?.contactEmail?.trim();
+      if (fromSettings) {
+        return fromSettings;
+      }
     }
   } catch (error) {
     console.error('Error reading admin email from settings:', error);
   }
-  return 'ahmedshayan928@gmail.com'; // Fallback
+  return DEFAULT_CONTACT_EMAIL;
 }
 
 // Create email transporter using Gmail or other SMTP service
 export const createEmailTransporter = () => {
   const emailUser = process.env.EMAIL_USER || getAdminEmail();
-  const emailPassword = process.env.EMAIL_PASSWORD || 'kcgs qetd brsk dtfz'; // Fallback to .env.local value
+  const emailPassword = process.env.EMAIL_PASSWORD;
+
+  if (!emailPassword) {
+    console.error('❌ EMAIL_PASSWORD is not set — emails cannot be sent.');
+  }
   
   // Debug logging (remove in production)
   console.log('📧 Email Configuration:');
