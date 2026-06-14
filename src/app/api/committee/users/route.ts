@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { createNotification, NotificationTemplates } from '@/lib/notification-service';
+
+async function userIsCommitteeMember(userId: string) {
+  const committees = await db.committee.findMany({
+    where: { isActive: true },
+    select: { chairpersonId: true, members: true },
+  });
+
+  return committees.some((committee) => {
+    if (committee.chairpersonId === userId) {
+      return true;
+    }
+    if (!committee.members) {
+      return false;
+    }
+    try {
+      const memberIds = JSON.parse(committee.members);
+      return Array.isArray(memberIds) && memberIds.includes(userId);
+    } catch {
+      return false;
+    }
+  });
+}
 
 async function requireCommitteeApprover(request: NextRequest) {
   const userId = request.headers.get('x-user-id');
@@ -17,16 +38,20 @@ async function requireCommitteeApprover(request: NextRequest) {
     return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
   }
 
-  if (user.role !== 'COMMITTEE_HEAD' && user.role !== 'ADMIN') {
-    return {
-      error: NextResponse.json(
-        { error: 'Only committee heads can manage user registrations' },
-        { status: 403 },
-      ),
-    };
+  if (user.role === 'ADMIN' || user.role === 'COMMITTEE_HEAD') {
+    return { userId };
   }
 
-  return { userId };
+  if (user.role === 'TEACHER' && (await userIsCommitteeMember(userId))) {
+    return { userId };
+  }
+
+  return {
+    error: NextResponse.json(
+      { error: 'Only committee heads and members can manage user registrations' },
+      { status: 403 },
+    ),
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -140,6 +165,9 @@ export async function PATCH(request: NextRequest) {
     });
 
     try {
+      const { createNotification, NotificationTemplates } = await import(
+        '@/lib/notification-service'
+      );
       const template =
         newStatus === 'APPROVED'
           ? NotificationTemplates.userApproved(updatedUser.name || 'User')

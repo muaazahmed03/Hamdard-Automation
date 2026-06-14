@@ -80,9 +80,9 @@ export async function POST(request: NextRequest) {
       where: { id: userId },
     });
 
-    if (!user || user.role !== 'TEACHER') {
+    if (!user || !['TEACHER', 'COMMITTEE_HEAD', 'ADMIN'].includes(user.role)) {
       return NextResponse.json(
-        { error: 'Only teachers can propose project ideas' },
+        { error: 'Only teachers, committee heads, or admins can propose project ideas' },
         { status: 403 }
       );
     }
