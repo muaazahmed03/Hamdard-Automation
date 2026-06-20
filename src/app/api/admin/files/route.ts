@@ -95,31 +95,21 @@ export async function GET() {
         return true;
       }
       
-      // For PROPOSAL files, check supervisor/committee approval
-      // Must be approved by supervisor OR approved by committee head
-      const isSupervisorApproved = submission.status === 'APPROVED' || 
-                                   submission.supervisorApprovalStatus === 'APPROVED';
-      const isCommitteeApproved = submission.status === 'COMMITTEE_APPROVED';
-      
-      if (!isSupervisorApproved && !isCommitteeApproved) {
-        console.log('[Admin Files API] Rejected: Not supervisor/committee approved');
-        return false;
+      // For PROPOSAL files, show all pending review items for admin/committee
+      if (fileTypeUpper === 'PROPOSAL') {
+        const excludedStatuses = ['ADMIN_APPROVED', 'ADMIN_REJECTED'];
+        if (excludedStatuses.includes(submission.status)) {
+          console.log('[Admin Files API] Rejected: Proposal already processed by admin');
+          return false;
+        }
+        console.log('[Admin Files API] ACCEPTED: Proposal will be shown');
+        return true;
       }
-      
-      // Only exclude proposals already fully processed by admin (final decision made)
-      const excludedStatuses = ['ADMIN_APPROVED', 'ADMIN_REJECTED'];
-      const isExcluded = excludedStatuses.includes(submission.status);
-      
-      if (isExcluded) {
-        console.log('[Admin Files API] Rejected: Already processed by admin');
-        return false;
-      }
-      
-      console.log('[Admin Files API] ACCEPTED: Proposal will be shown');
-      return true;
+
+      return false;
     });
     
-    console.log(`[Admin Files API] After filtering: ${submissions.length} supervisor-approved proposals for admin`);
+    console.log(`[Admin Files API] After filtering: ${submissions.length} files for admin review`);
     
     // Log each submission for debugging
     submissions.forEach((sub: any, idx: number) => {

@@ -394,6 +394,20 @@ export async function POST(request: Request) {
       
       // Notify supervisor if this is a proposal (needs approval)
       if (fileTypeUpper === 'PROPOSAL') {
+        try {
+          const proposalNotif = {
+            title: 'New Proposal Submitted',
+            message: `${userName || 'A student'} submitted a proposal "${projectTitle || file.name}" for review.`,
+            type: 'info' as const,
+            category: 'file',
+            link: '/super-admin',
+          };
+          await notifyUsersByRole('COMMITTEE_HEAD', proposalNotif);
+          await notifyUsersByRole('ADMIN', proposalNotif);
+        } catch (notifError) {
+          console.error('Error notifying committee/admin for proposal:', notifError);
+        }
+
         if (supervisorId) {
           try {
             console.log(`Sending notification to supervisor ${supervisorId} for proposal from student ${userId}`);

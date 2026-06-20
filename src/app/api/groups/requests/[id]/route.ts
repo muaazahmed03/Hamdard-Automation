@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { createNotification, NotificationTemplates } from '@/lib/notification-service';
+import { createNotification, NotificationTemplates, notifyUsersByRole } from '@/lib/notification-service';
 
 const updateGroupRequestSchema = z.object({
   status: z.enum(['ACCEPTED', 'REJECTED']),
@@ -356,8 +356,24 @@ export async function PUT(
       // Get the final group details to return
       const finalGroup = await db.group.findUnique({
         where: { id: groupId },
-        select: { id: true, name: true }
+        select: { id: true, name: true, isApproved: true }
       });
+
+      if (groupFormed && finalGroup && !finalGroup.isApproved) {
+        try {
+          const groupNotif = {
+            title: 'New Group Pending Approval',
+            message: `Student group "${finalGroup.name}" is waiting for admin approval.`,
+            type: 'info' as const,
+            category: 'approval',
+            link: '/super-admin',
+          };
+          await notifyUsersByRole('ADMIN', groupNotif);
+          await notifyUsersByRole('COMMITTEE_HEAD', groupNotif);
+        } catch (notifError) {
+          console.error('Error notifying admin about new group:', notifError);
+        }
+      }
       
       return NextResponse.json({ 
         ...updatedRequest, 

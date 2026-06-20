@@ -58,13 +58,10 @@ function shouldShowSubmission(submission: any) {
   }
 
   if (fileType === 'PROPOSAL') {
-    const supervisorApproved =
-      submission.supervisorApprovalStatus === 'APPROVED' ||
-      submission.status === 'APPROVED';
-    const committeeHandled = ['COMMITTEE_APPROVED', 'COMMITTEE_REJECTED'].includes(
-      submission.status,
-    );
-    return supervisorApproved || committeeHandled;
+    if (ADMIN_FINAL_STATUSES.includes(submission.status)) {
+      return false;
+    }
+    return true;
   }
 
   return false;

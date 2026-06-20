@@ -6,17 +6,9 @@ export async function GET() {
     const proposals = await db.projectSubmission.findMany({
       where: {
         fileType: 'PROPOSAL',
-        OR: [
-          {
-            supervisorApprovalStatus: 'APPROVED',
-            status: { notIn: ['ADMIN_APPROVED', 'ADMIN_REJECTED'] },
-          },
-          {
-            status: {
-              in: ['COMMITTEE_APPROVED', 'COMMITTEE_REJECTED', 'ADMIN_APPROVED', 'APPROVED'],
-            },
-          },
-        ],
+        status: {
+          notIn: ['ADMIN_APPROVED', 'ADMIN_REJECTED'],
+        },
       },
       include: {
         project: {

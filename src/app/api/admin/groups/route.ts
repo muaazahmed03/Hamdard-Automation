@@ -75,7 +75,12 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    return NextResponse.json(groupsWithApprover);
+    const filteredGroups =
+      status === 'pending'
+        ? groupsWithApprover.filter((group) => group.members.length >= 2)
+        : groupsWithApprover;
+
+    return NextResponse.json(filteredGroups);
   } catch (error) {
     console.error('Error fetching groups:', error);
     return NextResponse.json(
