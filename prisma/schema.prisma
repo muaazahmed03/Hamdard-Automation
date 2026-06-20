@@ -205,15 +205,18 @@ model GroupMember {
 
 // Group Requests
 model GroupRequest {
-  id         String             @id @default(cuid())
-  fromUserId String
-  toUserId   String
-  groupId    String?
-  message    String?
-  groupName  String? // Group name proposed by the sender
-  status     GroupRequestStatus @default(PENDING)
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
+  id                   String             @id @default(cuid())
+  fromUserId           String
+  toUserId             String
+  groupId              String?
+  message              String?
+  groupName            String? // Group name proposed by the sender
+  projectTitle         String?
+  projectDescription   String?
+  projectRequirements  String?
+  status               GroupRequestStatus @default(PENDING)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   fromUser User @relation("SentRequests", fields: [fromUserId], references: [id], onDelete: Cascade)
   toUser   User @relation("ReceivedRequests", fields: [toUserId], references: [id], onDelete: Cascade)

@@ -135,6 +135,14 @@ export async function GET(req: NextRequest) {
         memberCount: members.length,
         members: members,
         supervisor: supervisor,
+        project: project
+          ? {
+              id: project.id,
+              title: project.title,
+              description: project.description,
+              requirements: project.requirements,
+            }
+          : null,
         isLeader: leader ? leader.userId === userId : false,
         isApproved: groupData.isApproved || false,
         approvedBy: groupData.approvedBy,

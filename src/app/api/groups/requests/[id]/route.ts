@@ -8,6 +8,43 @@ const updateGroupRequestSchema = z.object({
   groupName: z.string().optional(),
 });
 
+async function ensureGroupProject(
+  groupId: string,
+  leaderId: string,
+  projectData: {
+    title: string;
+    description: string;
+    requirements?: string | null;
+  },
+) {
+  const existing = await db.project.findFirst({
+    where: { groupId },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  if (existing) {
+    return db.project.update({
+      where: { id: existing.id },
+      data: {
+        title: projectData.title,
+        description: projectData.description,
+        requirements: projectData.requirements ?? existing.requirements,
+      },
+    });
+  }
+
+  return db.project.create({
+    data: {
+      title: projectData.title,
+      description: projectData.description,
+      requirements: projectData.requirements ?? null,
+      teacherId: leaderId,
+      groupId,
+      status: 'PROPOSED',
+    },
+  });
+}
+
 // PUT /api/groups/requests/[id] - Update group request status (accept/reject)
 export async function PUT(
   request: NextRequest,
@@ -223,18 +260,24 @@ export async function PUT(
         }
       } else {
         // Create a new group with the initiator as leader
-        // Use the groupName from the request if available, otherwise generate one
-        const finalGroupName = groupRequest.groupName || groupName || `Group ${groupRequest.fromUser.name} & ${groupRequest.toUser.name}`;
-        
+        const finalGroupName =
+          groupRequest.projectTitle ||
+          groupRequest.groupName ||
+          groupName ||
+          `Group ${groupRequest.fromUser.name} & ${groupRequest.toUser.name}`;
+        const finalDescription =
+          groupRequest.projectDescription?.trim() ||
+          'FYP Project Group';
+
         const newGroup = await db.group.create({
           data: {
             name: finalGroupName,
-            description: 'FYP Project Group',
-            maxMembers: 4,
-            isActive: true, // Group of 2 is valid and formed
+            description: finalDescription,
+            maxMembers: 3,
+            isActive: true,
           },
         });
-        
+
         groupId = newGroup.id;
 
         // Add both users to the new group
@@ -252,8 +295,23 @@ export async function PUT(
             },
           ],
         });
-        
-        groupFormed = true; // Group of 2 is complete and formed
+
+        groupFormed = true;
+      }
+
+      if (groupId && groupRequest.projectTitle && groupRequest.projectDescription) {
+        const leaderMembership = await db.groupMember.findFirst({
+          where: { groupId, role: 'LEADER' },
+        });
+        await ensureGroupProject(
+          groupId,
+          leaderMembership?.userId || groupRequest.fromUserId,
+          {
+            title: groupRequest.projectTitle,
+            description: groupRequest.projectDescription,
+            requirements: groupRequest.projectRequirements,
+          },
+        );
       }
       
       // Get the final group details to return

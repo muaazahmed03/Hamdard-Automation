@@ -6,7 +6,7 @@ import { createNotification, NotificationTemplates } from '@/lib/notification-se
 const createSupervisionRequestSchema = z.object({
   teacherId: z.string(),
   projectId: z.string().optional(),
-  message: z.string(),
+  message: z.string().min(1, 'Message is required'),
 });
 
 // GET /api/supervision/requests - Get current user's supervision requests
@@ -236,6 +236,7 @@ export async function POST(request: NextRequest) {
     const studentGroup = await db.groupMember.findFirst({
       where: {
         userId: userId,
+        group: { isActive: true },
       },
       include: {
         group: {
@@ -245,10 +246,42 @@ export async function POST(request: NextRequest) {
                 user: true,
               },
             },
+            projects: {
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+            },
           },
         },
       },
     });
+
+    if (!studentGroup) {
+      return NextResponse.json(
+        { error: 'You must be in a group before sending a supervision request' },
+        { status: 400 },
+      );
+    }
+
+    const membership = studentGroup.group.members.find((m) => m.userId === userId);
+    if (membership?.role !== 'LEADER') {
+      return NextResponse.json(
+        { error: 'Only the group leader can send supervision requests' },
+        { status: 403 },
+      );
+    }
+
+    const groupProject = studentGroup.group.projects[0] ?? null;
+    const resolvedProjectId = validatedData.projectId || groupProject?.id || undefined;
+
+    if (!resolvedProjectId) {
+      return NextResponse.json(
+        {
+          error:
+            'Your group does not have project details yet. Complete a group request with project information first.',
+        },
+        { status: 400 },
+      );
+    }
 
     // Check if any group member already has an accepted supervisor
     if (studentGroup) {
@@ -314,8 +347,8 @@ export async function POST(request: NextRequest) {
       data: {
         studentId: userId,
         teacherId: validatedData.teacherId,
-        projectId: validatedData.projectId,
-        message: validatedData.message,
+        projectId: resolvedProjectId,
+        message: validatedData.message.trim(),
         status: 'PENDING',
       },
       include: {
@@ -341,6 +374,7 @@ export async function POST(request: NextRequest) {
             id: true,
             title: true,
             description: true,
+            requirements: true,
           },
         },
       },

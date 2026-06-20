@@ -7,6 +7,9 @@ const createGroupRequestSchema = z.object({
   toUserId: z.string(),
   message: z.string().optional(),
   groupName: z.string().optional(),
+  projectTitle: z.string().min(1).optional(),
+  projectDescription: z.string().min(1).optional(),
+  projectRequirements: z.string().min(1).optional(),
 });
 
 // GET /api/groups/requests - Get current user's group requests
@@ -161,6 +164,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      !senderGroup &&
+      (!validatedData.projectTitle?.trim() ||
+        !validatedData.projectDescription?.trim() ||
+        !validatedData.projectRequirements?.trim())
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Project name, description, and requirements are required for your first group request.',
+        },
+        { status: 400 },
+      );
+    }
+
     // Check if recipient's group has reached maximum size
     const recipientGroup = await db.groupMember.findFirst({
       where: { 
@@ -234,8 +252,13 @@ export async function POST(request: NextRequest) {
       data: {
         fromUserId: userId,
         toUserId: validatedData.toUserId,
-        message: validatedData.message || 'I would like to team up for the FYP project.',
-        groupName: validatedData.groupName,
+        message:
+          validatedData.message ||
+          'Hi! I would like to team up with you for the FYP project.',
+        groupName: validatedData.groupName || validatedData.projectTitle,
+        projectTitle: validatedData.projectTitle,
+        projectDescription: validatedData.projectDescription,
+        projectRequirements: validatedData.projectRequirements,
         status: 'PENDING',
       },
       include: {
