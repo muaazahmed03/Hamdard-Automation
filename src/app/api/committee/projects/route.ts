@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { matchesReviewStatus, parseReviewStatusFilter } from '@/lib/submission-review';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const reviewStatus = parseReviewStatusFilter(searchParams.get('reviewStatus'));
+
     const proposals = await db.projectSubmission.findMany({
       where: {
         fileType: 'PROPOSAL',
-        status: {
-          notIn: ['ADMIN_APPROVED', 'ADMIN_REJECTED'],
-        },
       },
       include: {
         project: {
@@ -55,7 +56,11 @@ export async function GET() {
       },
     });
 
-    const projectsWithProposals = proposals.map((proposal) => ({
+    const visible = proposals.filter((proposal) =>
+      matchesReviewStatus(proposal.status, reviewStatus),
+    );
+
+    const projectsWithProposals = visible.map((proposal) => ({
       id: proposal.id,
       proposalId: proposal.id,
       proposalTitle: proposal.title,

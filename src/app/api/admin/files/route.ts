@@ -1,27 +1,17 @@
-import { NextResponse } from 'next/server'
-import { db as prisma } from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server';
+import { db as prisma } from '@/lib/db';
+import {
+  isTrackableSubmissionFileType,
+  matchesReviewStatus,
+  parseReviewStatusFilter,
+} from '@/lib/submission-review';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // First, let's check what proposals exist with supervisorApprovalStatus = 'APPROVED'
-    const testQuery = await prisma.projectSubmission.findMany({
-      where: {
-        supervisorApprovalStatus: 'APPROVED'
-      },
-      select: {
-        id: true,
-        fileName: true,
-        fileType: true,
-        status: true,
-        supervisorApprovalStatus: true
-      },
-      take: 10
-    });
-    console.log('[Admin Files API] Test - All files with supervisorApprovalStatus=APPROVED:', JSON.stringify(testQuery, null, 2));
+    const { searchParams } = new URL(request.url);
+    const reviewStatus = parseReviewStatusFilter(searchParams.get('reviewStatus'));
 
-    // Get ALL proposals, reports, and documentation files
-    // Reports and documentation are automatically forwarded for tracking
-    const allProposals = await prisma.projectSubmission.findMany({
+    const allSubmissions = await prisma.projectSubmission.findMany({
       where: {
         OR: [
           { fileType: 'PROPOSAL' },
@@ -33,7 +23,7 @@ export async function GET() {
           { fileType: 'FYP_I' },
           { fileType: 'FYP_II' },
           { fileType: 'OTHER' },
-        ]
+        ],
       },
       include: {
         student: {
@@ -54,15 +44,15 @@ export async function GET() {
               select: {
                 id: true,
                 name: true,
-              }
+              },
             },
             supervisor: {
               select: {
                 id: true,
                 name: true,
                 email: true,
-              }
-            }
+              },
+            },
           },
         },
       },
@@ -71,64 +61,21 @@ export async function GET() {
       },
     });
 
-    console.log(`[Admin Files API] Found ${allProposals.length} total files in database`);
-
-    // Filter files based on type
-    const submissions = allProposals.filter((submission: any) => {
-      const fileTypeUpper = (submission.fileType || '').toUpperCase();
-      
-      // REPORT, DOCUMENTATION, and FYP document submissions — show pending review items
-      if (
-        fileTypeUpper === 'REPORT' ||
-        fileTypeUpper === 'DOCUMENTATION' ||
-        fileTypeUpper === 'FYP_I' ||
-        fileTypeUpper === 'FYP_II' ||
-        fileTypeUpper === 'OTHER'
-      ) {
-        // Only exclude if deleted or fully processed by admin
-        const excludedStatuses = ['ADMIN_APPROVED', 'ADMIN_REJECTED'];
-        if (excludedStatuses.includes(submission.status)) {
-          console.log('[Admin Files API] Rejected: Document already processed');
-          return false;
-        }
-        console.log('[Admin Files API] ACCEPTED: Document submission will be shown');
-        return true;
+    const submissions = allSubmissions.filter((submission) => {
+      if (!isTrackableSubmissionFileType(submission.fileType)) {
+        return false;
       }
-      
-      // For PROPOSAL files, show all pending review items for admin/committee
-      if (fileTypeUpper === 'PROPOSAL') {
-        const excludedStatuses = ['ADMIN_APPROVED', 'ADMIN_REJECTED'];
-        if (excludedStatuses.includes(submission.status)) {
-          console.log('[Admin Files API] Rejected: Proposal already processed by admin');
-          return false;
-        }
-        console.log('[Admin Files API] ACCEPTED: Proposal will be shown');
-        return true;
-      }
-
-      return false;
-    });
-    
-    console.log(`[Admin Files API] After filtering: ${submissions.length} files for admin review`);
-    
-    // Log each submission for debugging
-    submissions.forEach((sub: any, idx: number) => {
-      console.log(`[Admin Files API] Submission ${idx + 1}:`, {
-        id: sub.id,
-        fileName: sub.fileName,
-        fileType: sub.fileType,
-        status: sub.status,
-        supervisorApprovalStatus: sub.supervisorApprovalStatus
-      });
+      return matchesReviewStatus(submission.status, reviewStatus);
     });
 
-
-    const formattedFiles = submissions.map((submission: any) => ({
+    const formattedFiles = submissions.map((submission) => ({
       id: submission.id,
       fileName: submission.fileName || 'Unknown File',
       originalName: submission.fileName || 'Unknown File',
       fileType: submission.fileType,
-      fileSize: submission.fileSize ? `${Math.round(submission.fileSize / 1024)} KB` : 'Unknown',
+      fileSize: submission.fileSize
+        ? `${Math.round(submission.fileSize / 1024)} KB`
+        : 'Unknown',
       fileSizeBytes: submission.fileSize,
       studentName: submission.student?.name || 'Unknown',
       studentEmail: submission.student?.email || '',

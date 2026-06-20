@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db as prisma } from '@/lib/db';
 import { createNotification } from '@/lib/notification-service';
+import {
+  isTrackableSubmissionFileType,
+  matchesReviewStatus,
+  parseReviewStatusFilter,
+} from '@/lib/submission-review';
 
 const FILE_TYPES = ['PROPOSAL', 'REPORT', 'DOCUMENTATION', 'FYP_I', 'FYP_II', 'OTHER'];
-const ADMIN_FINAL_STATUSES = ['ADMIN_APPROVED', 'ADMIN_REJECTED'];
 
 function formatSubmission(submission: any) {
   return {
@@ -42,33 +46,21 @@ function formatSubmission(submission: any) {
   };
 }
 
-function shouldShowSubmission(submission: any) {
-  if (ADMIN_FINAL_STATUSES.includes(submission.status)) {
+function shouldShowSubmission(
+  submission: { fileType?: string | null; status?: string | null },
+  reviewStatus: ReturnType<typeof parseReviewStatusFilter>,
+) {
+  if (!isTrackableSubmissionFileType(submission.fileType)) {
     return false;
   }
-
-  const fileType = (submission.fileType || '').toUpperCase();
-
-  if (fileType === 'REPORT' || fileType === 'DOCUMENTATION') {
-    return true;
-  }
-
-  if (fileType === 'FYP_I' || fileType === 'FYP_II' || fileType === 'OTHER') {
-    return true;
-  }
-
-  if (fileType === 'PROPOSAL') {
-    if (ADMIN_FINAL_STATUSES.includes(submission.status)) {
-      return false;
-    }
-    return true;
-  }
-
-  return false;
+  return matchesReviewStatus(submission.status, reviewStatus);
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const reviewStatus = parseReviewStatusFilter(searchParams.get('reviewStatus'));
+
     const submissions = await prisma.projectSubmission.findMany({
       where: {
         fileType: {
@@ -111,7 +103,9 @@ export async function GET() {
       },
     });
 
-    const visible = submissions.filter(shouldShowSubmission);
+    const visible = submissions.filter((submission) =>
+      shouldShowSubmission(submission, reviewStatus),
+    );
     return NextResponse.json(visible.map(formatSubmission));
   } catch (error) {
     console.error('[Committee Files API] Error fetching files:', error);
