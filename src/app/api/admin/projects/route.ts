@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
         requirements: requirements || '',
         teacherId,
         status: 'PROPOSED',
+        isFacultyProposed: true,
       },
       include: {
         teacher: {

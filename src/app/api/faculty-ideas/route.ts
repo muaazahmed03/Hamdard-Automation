@@ -6,8 +6,8 @@ export async function GET(request: NextRequest) {
   try {
     const facultyIdeas = await db.project.findMany({
       where: {
-        isFacultyProposed: true,
-        status: 'PROPOSED', // Only show proposed ideas that haven't been taken yet
+        status: 'PROPOSED',
+        groupId: null,
         teacher: {
           role: { in: ['TEACHER', 'COMMITTEE_HEAD', 'ADMIN'] },
         },
