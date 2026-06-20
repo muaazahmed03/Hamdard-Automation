@@ -37,6 +37,10 @@ export const setupSocket = (io: Server) => {
       senderId: string;
       senderName?: string;
       clientTempId?: string;
+      fileUrl?: string;
+      fileName?: string;
+      fileType?: string;
+      fileSize?: number;
     }) => {
       try {
         // Find or create conversation between sender and recipient
@@ -70,6 +74,10 @@ export const setupSocket = (io: Server) => {
             receiverId: data.toUserId,
             content: data.content,
             isRead: false,
+            fileUrl: data.fileUrl,
+            fileName: data.fileName,
+            fileType: data.fileType,
+            fileSize: data.fileSize,
           },
           include: { sender: { select: { id: true, name: true } } }
         });
@@ -92,6 +100,10 @@ export const setupSocket = (io: Server) => {
           receiverId: message.receiverId,
           isRead: message.isRead,
           createdAt: message.createdAt,
+          fileUrl: message.fileUrl,
+          fileName: message.fileName,
+          fileType: message.fileType,
+          fileSize: message.fileSize,
           sender: {
             id: message.sender.id,
             name: message.sender.name,

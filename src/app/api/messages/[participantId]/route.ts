@@ -253,6 +253,10 @@ export async function POST(
       receiverId: message.receiverId,
       isRead: message.isRead,
       createdAt: message.createdAt,
+      fileUrl: message.fileUrl,
+      fileName: message.fileName,
+      fileType: message.fileType,
+      fileSize: message.fileSize,
       sender: {
         id: message.sender.id,
         name: message.sender.name,
