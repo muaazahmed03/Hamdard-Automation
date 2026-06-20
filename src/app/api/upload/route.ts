@@ -5,6 +5,39 @@ import { existsSync } from 'fs';
 import { createNotification, NotificationTemplates, notifyUsersByRole } from '@/lib/notification-service';
 import { db as prisma } from '@/lib/db';
 
+const DOCUMENT_FILE_TYPES = new Set(['FYP_I', 'FYP_II', 'OTHER']);
+const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+const ALLOWED_DOCUMENT_EXTENSIONS = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif', '.webp'];
+const ALLOWED_DOCUMENT_MIMES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
+
+function isDocumentSubmissionType(fileType?: string | null) {
+  return DOCUMENT_FILE_TYPES.has((fileType || '').toUpperCase());
+}
+
+function isAllowedDocumentFile(file: File) {
+  const name = (file.name || '').toLowerCase();
+  const mime = (file.type || '').toLowerCase();
+  const extOk = ALLOWED_DOCUMENT_EXTENSIONS.some((ext) => name.endsWith(ext));
+  const mimeOk = ALLOWED_DOCUMENT_MIMES.includes(mime);
+  return extOk || mimeOk;
+}
+
+function documentCategoryLabel(fileType: string) {
+  const upper = fileType.toUpperCase();
+  if (upper === 'FYP_I') return 'FYP-I';
+  if (upper === 'FYP_II') return 'FYP-II';
+  return 'Other Document';
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
@@ -24,10 +57,60 @@ export async function POST(request: Request) {
       );
     }
 
+    const fileTypeUpperEarly = (fileType || '').toUpperCase();
+    const isDocumentSubmission = isDocumentSubmissionType(fileTypeUpperEarly);
+
+    if (isDocumentSubmission) {
+      if (!userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      if (!isAllowedDocumentFile(file)) {
+        return NextResponse.json(
+          { error: 'Invalid file type. Allowed: PDF, Word (.doc/.docx), and images (JPEG, PNG, GIF, WebP).' },
+          { status: 400 },
+        );
+      }
+      if (file.size > MAX_DOCUMENT_BYTES) {
+        return NextResponse.json(
+          { error: 'File too large. Maximum size is 10MB.' },
+          { status: 400 },
+        );
+      }
+
+      const approvedMembership = await prisma.groupMember.findFirst({
+        where: {
+          userId,
+          group: {
+            isActive: true,
+            isApproved: true,
+          },
+        },
+        include: {
+          group: {
+            include: {
+              projects: {
+                orderBy: { updatedAt: 'desc' },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+
+      if (!approvedMembership) {
+        return NextResponse.json(
+          { error: 'You must belong to an approved FYP group before submitting documents.' },
+          { status: 403 },
+        );
+      }
+    }
+
     // Determine upload directory based on type
     let uploadSubDir = 'uploads';
     if (type === 'policy') {
       uploadSubDir = 'uploads/policies';
+    } else if (isDocumentSubmission || type?.toLowerCase() === 'document') {
+      uploadSubDir = 'uploads/documents';
     } else if (type?.toLowerCase() === 'proposal') {
       uploadSubDir = 'uploads/proposals';
     } else if (type?.toLowerCase() === 'transcript') {
@@ -62,6 +145,87 @@ export async function POST(request: Request) {
       // For proposals, try to find or create a project if possible, otherwise allow null
       let finalProjectId = projectId || undefined;
       let supervisorId = null;
+
+      if (isDocumentSubmission) {
+        const documentTitle = (formData.get('documentTitle') as string) || projectTitle || file.name;
+        const approvedMembership = await prisma.groupMember.findFirst({
+          where: {
+            userId,
+            group: {
+              isActive: true,
+              isApproved: true,
+            },
+          },
+          include: {
+            group: {
+              include: {
+                projects: {
+                  orderBy: { updatedAt: 'desc' },
+                  take: 1,
+                },
+              },
+            },
+          },
+        });
+
+        if (!approvedMembership) {
+          return NextResponse.json(
+            { error: 'You must belong to an approved FYP group before submitting documents.' },
+            { status: 403 },
+          );
+        }
+
+        finalProjectId = approvedMembership.group.projects[0]?.id || finalProjectId;
+
+        const createdSubmission = await prisma.projectSubmission.create({
+          data: {
+            studentId: userId,
+            projectId: finalProjectId,
+            title: documentTitle,
+            description: description || '',
+            fileUrl,
+            fileName: file.name,
+            fileType: fileTypeUpperEarly,
+            fileSize: file.size,
+            status: 'PENDING',
+            supervisorApprovalStatus: 'APPROVED',
+            approvedBySupervisorAt: new Date(),
+            isSubmitted: true,
+          },
+        });
+
+        const categoryLabel = documentCategoryLabel(fileTypeUpperEarly);
+        try {
+          await notifyUsersByRole('COMMITTEE_HEAD', {
+            title: `New ${categoryLabel} Submitted`,
+            message: `${userName || 'A student'} submitted "${documentTitle}" for review.`,
+            type: 'info',
+            category: 'file',
+            link: '/committee-head',
+          });
+          await notifyUsersByRole('ADMIN', {
+            title: `New ${categoryLabel} Submitted`,
+            message: `${userName || 'A student'} submitted "${documentTitle}" for review.`,
+            type: 'info',
+            category: 'file',
+            link: '/super-admin',
+          });
+        } catch (notifError) {
+          console.error('Error notifying committee/admin for document submission:', notifError);
+        }
+
+        return NextResponse.json({
+          url: fileUrl,
+          fileUrl,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          description,
+          documentType: fileTypeUpperEarly,
+          submissionId: createdSubmission.id,
+          uploadedAt: new Date().toISOString(),
+        });
+      }
       
       if (!finalProjectId && fileType?.toLowerCase() === 'proposal') {
         // First, try to find existing project by title in student's group
@@ -250,13 +414,15 @@ export async function POST(request: Request) {
       } else if (fileTypeUpper === 'REPORT' || fileTypeUpper === 'DOCUMENTATION') {
         // For REPORT and DOCUMENTATION, notify committee head and admin for tracking
         try {
-          await notifyUsersByRole(['COMMITTEE_HEAD', 'ADMIN'], {
+          const reportNotif = {
             title: `New ${fileTypeUpper === 'REPORT' ? 'Report' : 'Documentation'} Submitted`,
             message: `${userName || 'A student'} has submitted a ${fileTypeUpper.toLowerCase()} "${projectTitle || file.name}" for tracking.`,
-            type: 'info',
+            type: 'info' as const,
             category: 'file',
-            relatedId: submissionId
-          });
+            link: '/committee-head',
+          };
+          await notifyUsersByRole('COMMITTEE_HEAD', reportNotif);
+          await notifyUsersByRole('ADMIN', reportNotif);
           console.log(`Notification sent to committee head and admin for ${fileTypeUpper} from student ${userId}`);
         } catch (notifError) {
           console.error('Error notifying committee head/admin:', notifError);

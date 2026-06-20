@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db as prisma } from '@/lib/db';
 import { createNotification } from '@/lib/notification-service';
 
-const FILE_TYPES = ['PROPOSAL', 'REPORT', 'DOCUMENTATION'];
+const FILE_TYPES = ['PROPOSAL', 'REPORT', 'DOCUMENTATION', 'FYP_I', 'FYP_II', 'OTHER'];
 const ADMIN_FINAL_STATUSES = ['ADMIN_APPROVED', 'ADMIN_REJECTED'];
 
 function formatSubmission(submission: any) {
@@ -50,6 +50,10 @@ function shouldShowSubmission(submission: any) {
   const fileType = (submission.fileType || '').toUpperCase();
 
   if (fileType === 'REPORT' || fileType === 'DOCUMENTATION') {
+    return true;
+  }
+
+  if (fileType === 'FYP_I' || fileType === 'FYP_II' || fileType === 'OTHER') {
     return true;
   }
 

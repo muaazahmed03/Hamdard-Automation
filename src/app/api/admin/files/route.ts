@@ -29,7 +29,10 @@ export async function GET() {
           { fileType: 'REPORT' },
           { fileType: 'report' },
           { fileType: 'DOCUMENTATION' },
-          { fileType: 'documentation' }
+          { fileType: 'documentation' },
+          { fileType: 'FYP_I' },
+          { fileType: 'FYP_II' },
+          { fileType: 'OTHER' },
         ]
       },
       include: {
@@ -74,15 +77,21 @@ export async function GET() {
     const submissions = allProposals.filter((submission: any) => {
       const fileTypeUpper = (submission.fileType || '').toUpperCase();
       
-      // REPORT and DOCUMENTATION files are automatically forwarded - show all of them
-      if (fileTypeUpper === 'REPORT' || fileTypeUpper === 'DOCUMENTATION') {
+      // REPORT, DOCUMENTATION, and FYP document submissions — show pending review items
+      if (
+        fileTypeUpper === 'REPORT' ||
+        fileTypeUpper === 'DOCUMENTATION' ||
+        fileTypeUpper === 'FYP_I' ||
+        fileTypeUpper === 'FYP_II' ||
+        fileTypeUpper === 'OTHER'
+      ) {
         // Only exclude if deleted or fully processed by admin
         const excludedStatuses = ['ADMIN_APPROVED', 'ADMIN_REJECTED'];
         if (excludedStatuses.includes(submission.status)) {
-          console.log('[Admin Files API] Rejected: Report/Documentation already processed');
+          console.log('[Admin Files API] Rejected: Document already processed');
           return false;
         }
-        console.log('[Admin Files API] ACCEPTED: Report/Documentation will be shown');
+        console.log('[Admin Files API] ACCEPTED: Document submission will be shown');
         return true;
       }
       
