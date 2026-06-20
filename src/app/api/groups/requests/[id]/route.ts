@@ -8,6 +8,34 @@ const updateGroupRequestSchema = z.object({
   groupName: z.string().optional(),
 });
 
+async function resolveGroupProjectTeacherId(groupId: string, leaderId: string) {
+  const members = await db.groupMember.findMany({
+    where: { groupId },
+    select: { userId: true },
+  });
+  const memberIds = members.map((member) => member.userId);
+
+  const acceptedSupervisor = await db.supervisorRequest.findFirst({
+    where: {
+      studentId: { in: memberIds.length ? memberIds : [leaderId] },
+      status: 'ACCEPTED',
+    },
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  if (acceptedSupervisor?.teacherId) {
+    return {
+      teacherId: acceptedSupervisor.teacherId,
+      supervisorId: acceptedSupervisor.teacherId,
+    };
+  }
+
+  return {
+    teacherId: leaderId,
+    supervisorId: null as string | null,
+  };
+}
+
 async function ensureGroupProject(
   groupId: string,
   leaderId: string,
@@ -22,6 +50,8 @@ async function ensureGroupProject(
     orderBy: { createdAt: 'asc' },
   });
 
+  const teacherInfo = await resolveGroupProjectTeacherId(groupId, leaderId);
+
   if (existing) {
     return db.project.update({
       where: { id: existing.id },
@@ -29,6 +59,13 @@ async function ensureGroupProject(
         title: projectData.title,
         description: projectData.description,
         requirements: projectData.requirements ?? existing.requirements,
+        isFacultyProposed: false,
+        ...(teacherInfo.supervisorId
+          ? {
+              teacherId: teacherInfo.teacherId,
+              supervisorId: teacherInfo.supervisorId,
+            }
+          : {}),
       },
     });
   }
@@ -38,9 +75,11 @@ async function ensureGroupProject(
       title: projectData.title,
       description: projectData.description,
       requirements: projectData.requirements ?? null,
-      teacherId: leaderId,
+      teacherId: teacherInfo.teacherId,
+      supervisorId: teacherInfo.supervisorId,
       groupId,
       status: 'PROPOSED',
+      isFacultyProposed: false,
     },
   });
 }

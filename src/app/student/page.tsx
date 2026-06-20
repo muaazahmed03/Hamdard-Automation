@@ -175,11 +175,11 @@ export default function StudentDashboard() {
   const [groupNameInput, setGroupNameInput] = useState('');
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
 
-  // Function to load all projects from teachers
+  // Function to load faculty-proposed project ideas only
   const loadProjects = async () => {
     setLoadingProjects(true);
     try {
-      const response = await fetch('/api/admin/projects');
+      const response = await fetch('/api/faculty-ideas');
       if (response.ok) {
         const projects = await response.json();
         setAllProjects(projects);

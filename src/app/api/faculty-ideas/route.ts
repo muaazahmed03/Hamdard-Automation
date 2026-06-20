@@ -8,6 +8,9 @@ export async function GET(request: NextRequest) {
       where: {
         isFacultyProposed: true,
         status: 'PROPOSED', // Only show proposed ideas that haven't been taken yet
+        teacher: {
+          role: { in: ['TEACHER', 'COMMITTEE_HEAD', 'ADMIN'] },
+        },
       },
       include: {
         teacher: {
