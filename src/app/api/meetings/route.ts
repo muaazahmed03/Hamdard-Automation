@@ -1,85 +1,129 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendMeetingNotification } from '@/lib/socket';
+import { db } from '@/lib/db';
+import { createNotification, NotificationTemplates } from '@/lib/notification-service';
 
-// Get Socket.IO server instance
-let io: any = null;
+function parseMeetingDateTime(date: string, time: string) {
+  const [year, month, day] = date.split('-').map(Number);
+  const [hours, minutes] = time.split(':').map(Number);
+  const startTime = new Date(year, month - 1, day, hours || 0, minutes || 0, 0, 0);
+  const endTime = new Date(startTime);
+  endTime.setHours(endTime.getHours() + 1);
+  return { startTime, endTime };
+}
 
-// Function to get Socket.IO instance (this would be initialized in your server file)
-const getSocketIO = () => {
-  if (!io && typeof global !== 'undefined' && (global as any).socketIO) {
-    io = (global as any).socketIO;
-  }
-  return io;
-};
+function formatDateValue(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
-// Mock data storage (in a real app, this would be a database)
-let meetings: any[] = [
-  {
-    id: 1,
-    title: 'Project Progress Discussion',
-    description: 'Discuss current progress and next steps',
-    date: '2024-01-20',
-    time: '14:00',
-    startTime: '2024-01-20T14:00:00Z',
-    endTime: '2024-01-20T15:00:00Z',
-    type: 'online',
-    meetingLink: 'https://zoom.us/meeting/123456',
-    location: '',
-    supervisorId: '1',
-    supervisorName: 'Dr. John Smith',
-    studentId: 'CS2021001',
-    studentName: 'John Doe',
-    status: 'scheduled',
-    createdAt: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: 2,
-    title: 'Thesis Proposal Review',
-    description: 'Review and approve thesis proposal',
-    date: '2024-01-22',
-    time: '10:00',
-    startTime: '2024-01-22T10:00:00Z',
-    endTime: '2024-01-22T11:00:00Z',
-    type: 'offline',
-    meetingLink: '',
-    location: 'Room 301, CS Department',
-    supervisorId: '2',
-    supervisorName: 'Dr. Sarah Johnson',
-    studentId: 'CS2021001',
-    studentName: 'John Doe',
-    status: 'scheduled',
-    createdAt: '2024-01-14T15:30:00Z'
-  }
-];
+function formatTimeValue(date: Date) {
+  const hours = `${date.getHours()}`.padStart(2, '0');
+  const minutes = `${date.getMinutes()}`.padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+function formatMeetingResponse(meeting: {
+  id: string;
+  title: string;
+  description: string | null;
+  startTime: Date;
+  endTime: Date;
+  location: string | null;
+  isOnline: boolean;
+  meetingLink: string | null;
+  status: string;
+  organizer: { id: string; name: string; role?: string | null };
+  attendees: Array<{
+    user: { id: string; name: string; role?: string | null };
+  }>;
+}) {
+  const supervisorAttendee = meeting.attendees.find(
+    (attendee) =>
+      attendee.user.role === 'TEACHER' ||
+      attendee.user.role === 'COMMITTEE_HEAD' ||
+      attendee.user.role === 'ADMIN',
+  );
+  const studentAttendee = meeting.attendees.find(
+    (attendee) => attendee.user.role === 'STUDENT',
+  );
+
+  return {
+    id: meeting.id,
+    title: meeting.title,
+    description: meeting.description || '',
+    date: formatDateValue(meeting.startTime),
+    time: formatTimeValue(meeting.startTime),
+    startTime: meeting.startTime.toISOString(),
+    endTime: meeting.endTime.toISOString(),
+    type: meeting.isOnline ? 'online' : 'offline',
+    location: meeting.location || '',
+    meetingLink: meeting.meetingLink || '',
+    supervisorId: supervisorAttendee?.user.id || meeting.organizer.id,
+    supervisorName: supervisorAttendee?.user.name || meeting.organizer.name,
+    studentId: studentAttendee?.user.id || '',
+    studentName: studentAttendee?.user.name || '',
+    status: meeting.status.toLowerCase(),
+    createdAt: meeting.startTime.toISOString(),
+    attendees: meeting.attendees.map((attendee) => ({
+      id: attendee.user.id,
+      name: attendee.user.name,
+      role: attendee.user.role,
+    })),
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
+    const userId = request.headers.get('x-user-id');
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get('studentId');
     const supervisorId = searchParams.get('supervisorId');
 
-    let filteredMeetings = meetings;
-
-    if (studentId) {
-      filteredMeetings = filteredMeetings.filter(meeting => meeting.studentId === studentId);
+    const where: Record<string, unknown> = {};
+    if (userId) {
+      where.OR = [
+        { organizerId: userId },
+        { attendees: { some: { userId } } },
+      ];
+    } else if (studentId) {
+      where.attendees = { some: { userId: studentId } };
+    } else if (supervisorId) {
+      where.attendees = { some: { userId: supervisorId } };
     }
 
-    if (supervisorId) {
-      filteredMeetings = filteredMeetings.filter(meeting => meeting.supervisorId === supervisorId);
-    }
+    const meetings = await db.meeting.findMany({
+      where,
+      include: {
+        organizer: {
+          select: { id: true, name: true, role: true },
+        },
+        attendees: {
+          include: {
+            user: {
+              select: { id: true, name: true, role: true },
+            },
+          },
+        },
+      },
+      orderBy: { startTime: 'desc' },
+    });
 
-    return NextResponse.json(filteredMeetings);
+    return NextResponse.json(meetings.map(formatMeetingResponse));
   } catch (error) {
     console.error('Error fetching meetings:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch meetings' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch meetings' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = request.headers.get('x-user-id');
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const {
       title,
@@ -89,86 +133,116 @@ export async function POST(request: NextRequest) {
       type,
       location,
       meetingLink,
-      supervisorId
+      supervisorId,
+      participantIds,
+      organizerId,
     } = body;
 
-    // Validate required fields
-    if (!title || !date || !time || !supervisorId) {
+    if (!title?.trim() || !date || !time) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, date, time, supervisorId' },
-        { status: 400 }
+        { error: 'Missing required fields: title, date, time' },
+        { status: 400 },
       );
     }
 
-    // Validate meeting type specific fields
-    if (type === 'online' && !meetingLink) {
+    const isOnline = type === 'online';
+    if (isOnline && !meetingLink?.trim()) {
       return NextResponse.json(
         { error: 'Meeting link is required for online meetings' },
-        { status: 400 }
+        { status: 400 },
       );
     }
-
-    if (type === 'offline' && !location) {
+    if (!isOnline && !location?.trim()) {
       return NextResponse.json(
         { error: 'Location is required for offline meetings' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Mock supervisor data (in a real app, fetch from database)
-    const supervisors = {
-      '1': 'Dr. John Smith',
-      '2': 'Dr. Sarah Johnson',
-      '3': 'Dr. Michael Brown'
-    };
+    const { startTime, endTime } = parseMeetingDateTime(date, time);
+    let organizer = organizerId || userId;
+    let attendeeIds: string[] = [];
 
-    const supervisorName = supervisors[supervisorId as keyof typeof supervisors];
-    if (!supervisorName) {
+    if (Array.isArray(participantIds) && participantIds.length > 0) {
+      attendeeIds = participantIds.filter((id: unknown) => typeof id === 'string');
+      if (attendeeIds.length === 0) {
+        return NextResponse.json(
+          { error: 'Please select at least one student' },
+          { status: 400 },
+        );
+      }
+      organizer = organizerId || userId;
+    } else if (supervisorId) {
+      const supervisor = await db.user.findUnique({
+        where: { id: supervisorId },
+        select: { id: true, role: true },
+      });
+      if (!supervisor) {
+        return NextResponse.json({ error: 'Invalid supervisor ID' }, { status: 400 });
+      }
+      organizer = userId;
+      attendeeIds = [userId, supervisorId];
+    } else {
       return NextResponse.json(
-        { error: 'Invalid supervisor ID' },
-        { status: 400 }
+        { error: 'Missing required participants for this meeting' },
+        { status: 400 },
       );
     }
 
-    // Create new meeting
-    const newMeeting = {
-      id: meetings.length + 1,
-      title,
-      description: description || '',
-      date,
-      time,
-      startTime: `${date}T${time}:00Z`,
-      endTime: `${date}T${parseInt(time.split(':')[0]) + 1}:${time.split(':')[1]}:00Z`,
-      type,
-      meetingLink: meetingLink || '',
-      location: location || '',
-      supervisorId,
-      supervisorName,
-      studentId: 'CS2021001', // Mock student ID
-      studentName: 'John Doe', // Mock student name
-      status: 'scheduled',
-      createdAt: new Date().toISOString()
-    };
+    const uniqueAttendeeIds = [...new Set([organizer, ...attendeeIds])];
 
-    meetings.push(newMeeting);
+    const meeting = await db.meeting.create({
+      data: {
+        title: title.trim(),
+        description: description?.trim() || '',
+        startTime,
+        endTime,
+        location: location?.trim() || null,
+        isOnline,
+        meetingLink: meetingLink?.trim() || null,
+        organizerId: organizer,
+        attendees: {
+          create: uniqueAttendeeIds.map((attendeeId) => ({
+            userId: attendeeId,
+          })),
+        },
+      },
+      include: {
+        organizer: {
+          select: { id: true, name: true, role: true },
+        },
+        attendees: {
+          include: {
+            user: {
+              select: { id: true, name: true, role: true },
+            },
+          },
+        },
+      },
+    });
 
-    // Send real-time notification
-    const socketIO = getSocketIO();
-    if (socketIO) {
-      sendMeetingNotification(
-        socketIO,
-        supervisorId,
-        newMeeting.studentId,
-        newMeeting
-      );
-    }
+    const formattedDate = formatDateValue(startTime);
+    const formattedTime = formatTimeValue(startTime);
+    const notificationTemplate = NotificationTemplates.meetingScheduled(
+      meeting.title,
+      formattedDate,
+      formattedTime,
+    );
 
-    return NextResponse.json(newMeeting, { status: 201 });
+    await Promise.all(
+      uniqueAttendeeIds
+        .filter((attendeeId) => attendeeId !== organizer)
+        .map((attendeeId) =>
+          createNotification({
+            userId: attendeeId,
+            ...notificationTemplate,
+          }).catch((err) => console.warn('Failed to send meeting notification:', err)),
+        ),
+    );
+
+    return NextResponse.json(formatMeetingResponse(meeting), { status: 201 });
   } catch (error) {
     console.error('Error creating meeting:', error);
-    return NextResponse.json(
-      { error: 'Failed to create meeting' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create meeting' }, { status: 500 });
   }
 }

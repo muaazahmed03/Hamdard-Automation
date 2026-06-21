@@ -170,6 +170,41 @@ export async function POST(request: NextRequest) {
         !validatedData.projectDescription?.trim() ||
         !validatedData.projectRequirements?.trim())
     ) {
+      const existingOutgoing = await db.groupRequest.findFirst({
+        where: {
+          fromUserId: userId,
+          status: 'PENDING',
+          projectTitle: { not: null },
+          projectDescription: { not: null },
+          projectRequirements: { not: null },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (existingOutgoing) {
+        validatedData.projectTitle =
+          validatedData.projectTitle?.trim() || existingOutgoing.projectTitle || undefined;
+        validatedData.projectDescription =
+          validatedData.projectDescription?.trim() ||
+          existingOutgoing.projectDescription ||
+          undefined;
+        validatedData.projectRequirements =
+          validatedData.projectRequirements?.trim() ||
+          existingOutgoing.projectRequirements ||
+          undefined;
+        validatedData.groupName =
+          validatedData.groupName?.trim() ||
+          existingOutgoing.groupName ||
+          validatedData.projectTitle;
+      }
+    }
+
+    if (
+      !senderGroup &&
+      (!validatedData.projectTitle?.trim() ||
+        !validatedData.projectDescription?.trim() ||
+        !validatedData.projectRequirements?.trim())
+    ) {
       return NextResponse.json(
         {
           error:

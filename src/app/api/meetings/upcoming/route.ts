@@ -1,114 +1,84 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
 
-// Mock data storage (in a real app, this would be a database)
-const meetings = [
-  {
-    id: 1,
-    title: 'Project Progress Discussion',
-    description: 'Discuss current progress and next steps',
-    date: '2024-01-20',
-    time: '14:00',
-    startTime: '2024-01-20T14:00:00Z',
-    endTime: '2024-01-20T15:00:00Z',
-    type: 'online',
-    meetingLink: 'https://zoom.us/meeting/123456',
-    location: '',
-    supervisorId: '1',
-    supervisorName: 'Dr. John Smith',
-    studentId: 'CS2021001',
-    studentName: 'John Doe',
-    status: 'scheduled',
-    createdAt: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: 2,
-    title: 'Thesis Proposal Review',
-    description: 'Review and approve thesis proposal',
-    date: '2024-01-22',
-    time: '10:00',
-    startTime: '2024-01-22T10:00:00Z',
-    endTime: '2024-01-22T11:00:00Z',
-    type: 'offline',
-    meetingLink: '',
-    location: 'Room 301, CS Department',
-    supervisorId: '2',
-    supervisorName: 'Dr. Sarah Johnson',
-    studentId: 'CS2021001',
-    studentName: 'John Doe',
-    status: 'scheduled',
-    createdAt: '2024-01-14T15:30:00Z'
-  },
-  {
-    id: 3,
-    title: 'Demo Preparation',
-    description: 'Prepare for final project demo',
-    date: '2024-01-25',
-    time: '11:00',
-    startTime: '2024-01-25T11:00:00Z',
-    endTime: '2024-01-25T12:00:00Z',
-    type: 'online',
-    meetingLink: 'https://zoom.us/meeting/789012',
-    location: '',
-    supervisorId: '1',
-    supervisorName: 'Dr. John Smith',
-    studentId: 'CS2021001',
-    studentName: 'John Doe',
-    status: 'scheduled',
-    createdAt: '2024-01-13T09:15:00Z'
-  }
-];
+function formatDateValue(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function formatTimeValue(date: Date) {
+  const hours = `${date.getHours()}`.padStart(2, '0');
+  const minutes = `${date.getMinutes()}`.padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const studentId = searchParams.get('studentId') || 'CS2021001'; // Default to mock student
+    const userId = request.headers.get('x-user-id');
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    // Get current date and time
     const now = new Date();
-
-    // Filter upcoming meetings (meetings that haven't ended yet)
-    const upcomingMeetings = meetings
-      .filter(meeting => {
-        const meetingEndTime = new Date(meeting.endTime);
-        return meetingEndTime > now && meeting.studentId === studentId;
-      })
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-      .slice(0, 5); // Limit to next 5 meetings
-
-    // Format meetings for the frontend
-    const formattedMeetings = upcomingMeetings.map(meeting => ({
-      id: meeting.id,
-      title: meeting.title,
-      date: meeting.date,
-      time: meeting.time,
-      startTime: meeting.startTime,
-      endTime: meeting.endTime,
-      type: meeting.type,
-      isOnline: meeting.type === 'online',
-      location: meeting.location,
-      meetingLink: meeting.meetingLink,
-      supervisorName: meeting.supervisorName,
-      attendees: [
-        {
-          id: meeting.supervisorId,
-          name: meeting.supervisorName,
-          role: 'supervisor'
+    const meetings = await db.meeting.findMany({
+      where: {
+        endTime: { gt: now },
+        OR: [
+          { organizerId: userId },
+          { attendees: { some: { userId } } },
+        ],
+      },
+      include: {
+        organizer: {
+          select: { id: true, name: true, role: true },
         },
-        {
-          id: meeting.studentId,
-          name: meeting.studentName,
-          role: 'student'
-        }
-      ],
-      status: meeting.status
-    }));
+        attendees: {
+          include: {
+            user: {
+              select: { id: true, name: true, role: true },
+            },
+          },
+        },
+      },
+      orderBy: { startTime: 'asc' },
+      take: 10,
+    });
+
+    const formattedMeetings = meetings.map((meeting) => {
+      const supervisorAttendee = meeting.attendees.find(
+        (attendee) =>
+          attendee.user.role === 'TEACHER' ||
+          attendee.user.role === 'COMMITTEE_HEAD' ||
+          attendee.user.role === 'ADMIN',
+      );
+
+      return {
+        id: meeting.id,
+        title: meeting.title,
+        description: meeting.description || '',
+        date: formatDateValue(meeting.startTime),
+        time: formatTimeValue(meeting.startTime),
+        startTime: meeting.startTime.toISOString(),
+        endTime: meeting.endTime.toISOString(),
+        type: meeting.isOnline ? 'online' : 'offline',
+        isOnline: meeting.isOnline,
+        location: meeting.location || '',
+        meetingLink: meeting.meetingLink || '',
+        supervisorName: supervisorAttendee?.user.name || meeting.organizer.name,
+        attendees: meeting.attendees.map((attendee) => ({
+          id: attendee.user.id,
+          name: attendee.user.name,
+          role: attendee.user.role,
+        })),
+        status: meeting.status.toLowerCase(),
+      };
+    });
 
     return NextResponse.json(formattedMeetings);
   } catch (error) {
     console.error('Error fetching upcoming meetings:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch upcoming meetings' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch upcoming meetings' }, { status: 500 });
   }
 }
