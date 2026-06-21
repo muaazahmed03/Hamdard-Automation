@@ -134,6 +134,7 @@ export async function POST(request: NextRequest) {
       location,
       meetingLink,
       supervisorId,
+      memberIds,
       participantIds,
       organizerId,
     } = body;
@@ -182,6 +183,12 @@ export async function POST(request: NextRequest) {
       }
       organizer = userId;
       attendeeIds = [userId, supervisorId];
+      if (Array.isArray(memberIds) && memberIds.length > 0) {
+        const extraMembers = memberIds.filter(
+          (id: unknown) => typeof id === 'string' && id !== userId && id !== supervisorId,
+        );
+        attendeeIds.push(...extraMembers);
+      }
     } else {
       return NextResponse.json(
         { error: 'Missing required participants for this meeting' },
