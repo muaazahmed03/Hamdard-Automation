@@ -34,6 +34,11 @@ export default function HomePage() {
   const [verificationCode, setVerificationCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showEmailVerificationDialog, setShowEmailVerificationDialog] = useState(false)
+  const [emailVerificationCode, setEmailVerificationCode] = useState('')
+  const [emailVerificationLoading, setEmailVerificationLoading] = useState(false)
+  const [emailVerificationResending, setEmailVerificationResending] = useState(false)
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState('')
   // UI states
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
@@ -345,8 +350,13 @@ export default function HomePage() {
       const data = await response.json()
 
       if (response.ok) {
-        // Check if student is conditionally registered
-        if (data.eligibilityStatus === 'CONDITIONAL') {
+        if (data.requiresEmailVerification) {
+          setRegistrationResult(data)
+          setPendingVerificationEmail(email)
+          setEmailVerificationCode('')
+          setShowEmailVerificationDialog(true)
+          showMessage('Verification code sent to your email. Please verify to continue.', 'success')
+        } else if (data.eligibilityStatus === 'CONDITIONAL') {
           setRegistrationResult(data)
           setShowConditionalDialog(true)
         } else {
@@ -365,6 +375,79 @@ export default function HomePage() {
       showMessage("Something went wrong. Please try again.", 'error')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleVerifyRegistrationEmail = async () => {
+    if (!pendingVerificationEmail || emailVerificationCode.trim().length !== 6) {
+      showMessage('Please enter the 6-digit verification code', 'error')
+      return
+    }
+
+    setEmailVerificationLoading(true)
+    try {
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: pendingVerificationEmail,
+          code: emailVerificationCode.trim(),
+        }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        showMessage(data.error || 'Invalid or expired verification code', 'error')
+        return
+      }
+
+      setShowEmailVerificationDialog(false)
+      setEmailVerificationCode('')
+
+      if (data.requiresConditional) {
+        setRegistrationResult({
+          ...(registrationResult || {}),
+          userId: data.userId,
+          eligibilityStatus: data.eligibilityStatus,
+          cgpa: data.cgpa,
+          prerequisitesPassed: data.prerequisitesPassed,
+        })
+        setShowConditionalDialog(true)
+      } else {
+        setRegistrationResult(null)
+        setPendingVerificationEmail('')
+        showMessage(
+          'Email verified! Your registration is pending approval. You can log in once approved.',
+          'success',
+        )
+        setTimeout(() => setActiveTab('login'), 2000)
+      }
+    } catch {
+      showMessage('Verification failed. Please try again.', 'error')
+    } finally {
+      setEmailVerificationLoading(false)
+    }
+  }
+
+  const handleResendRegistrationCode = async () => {
+    if (!pendingVerificationEmail) return
+    setEmailVerificationResending(true)
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: pendingVerificationEmail }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        showMessage(data.error || 'Failed to resend verification code', 'error')
+        return
+      }
+      showMessage('A new verification code has been sent to your email.', 'success')
+    } catch {
+      showMessage('Failed to resend verification code', 'error')
+    } finally {
+      setEmailVerificationResending(false)
     }
   }
 
@@ -1115,6 +1198,77 @@ export default function HomePage() {
               className="bg-green-600 hover:bg-green-700"
             >
               {forgotPasswordLoading ? 'Processing...' : (resetPasswordStep === 'email' ? 'Send Code' : 'Reset Password')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showEmailVerificationDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowEmailVerificationDialog(false)
+            setEmailVerificationCode('')
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Verify Your Email</DialogTitle>
+            <DialogDescription>
+              We sent a 6-digit verification code to {pendingVerificationEmail}. Enter it below to continue registration.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="email-verification-code">Verification Code</Label>
+              <Input
+                id="email-verification-code"
+                type="text"
+                inputMode="numeric"
+                placeholder="Enter 6-digit code"
+                value={emailVerificationCode}
+                onChange={(e) =>
+                  setEmailVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+                }
+                disabled={emailVerificationLoading || emailVerificationResending}
+                maxLength={6}
+                required
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleResendRegistrationCode}
+              disabled={emailVerificationLoading || emailVerificationResending}
+            >
+              {emailVerificationResending ? 'Resending...' : 'Resend code'}
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowEmailVerificationDialog(false)
+                setEmailVerificationCode('')
+              }}
+              disabled={emailVerificationLoading || emailVerificationResending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleVerifyRegistrationEmail}
+              disabled={
+                emailVerificationLoading ||
+                emailVerificationResending ||
+                emailVerificationCode.length !== 6
+              }
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {emailVerificationLoading ? 'Verifying...' : 'Verify & Continue'}
             </Button>
           </DialogFooter>
         </DialogContent>

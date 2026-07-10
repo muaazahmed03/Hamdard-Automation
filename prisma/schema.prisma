@@ -41,10 +41,13 @@ model User {
   department       String?
   specialization   String?
   contactInfo      String?
-  resetToken       String?
-  resetTokenExpiry DateTime?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+  emailVerified      Boolean   @default(true)
+  emailVerifyToken   String?
+  emailVerifyExpiry  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   // Student relationships
   studentProfile         StudentProfile?

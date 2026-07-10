@@ -35,6 +35,10 @@ export default function RegisterPage() {
   const [activePolicy, setActivePolicy] = useState<any>(null);
   const [loadingPolicy, setLoadingPolicy] = useState(false);
   const [commitmentStatement, setCommitmentStatement] = useState('');
+  const [awaitingEmailVerification, setAwaitingEmailVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [resendingCode, setResendingCode] = useState(false);
   const router = useRouter();
 
   // Ensure favicon on this page (some browsers may cache or ignore app metadata)
@@ -191,6 +195,14 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
+        if (data.requiresEmailVerification) {
+          setAwaitingEmailVerification(true);
+          setSuccess(
+            'A verification code has been sent to your email. Enter it below to continue.',
+          );
+          return;
+        }
+
         if (formData.role === 'TEACHER' || formData.role === 'COMMITTEE_HEAD' || formData.role === 'ADMIN') {
           // Teachers and admins need approval, redirect to login
           setSuccess('Registration submitted! Your account is pending approval. You will be notified once approved.');
@@ -201,17 +213,10 @@ export default function RegisterPage() {
           const gpa = parseFloat(formData.gpa) || 0;
           
           if (gpa >= 3.0) {
-            // Auto-approved students (GPA >= 3.0)
-            setSuccess('Registration successful! Your account is approved. Logging you in...');
-            
-            // Store user data and token
-            localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('token', data.token || 'dummy-token');
-            
-            // Redirect to student dashboard
+            setSuccess('Email verified path complete. Your registration is pending approval.');
             setTimeout(() => {
-              router.push('/student');
-            }, 1500);
+              router.push('/');
+            }, 2000);
           } else {
             // Students with GPA < 3.0 require admin approval
             setSuccess('Registration submitted! Your GPA is below 3.0, so your account requires admin approval.');
@@ -227,6 +232,69 @@ export default function RegisterPage() {
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!verificationCode || verificationCode.length !== 6) {
+      setError('Please enter the 6-digit verification code');
+      return;
+    }
+
+    setVerifyingEmail(true);
+    try {
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          code: verificationCode,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Verification failed');
+        return;
+      }
+
+      setSuccess(
+        data.message ||
+          'Email verified successfully. Your registration is now pending admin approval.',
+      );
+      setTimeout(() => {
+        router.push('/');
+      }, 2500);
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setVerifyingEmail(false);
+    }
+  };
+
+  const handleResendVerificationCode = async () => {
+    setError('');
+    setResendingCode(true);
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'Failed to resend code');
+        return;
+      }
+      setSuccess(data.message || 'A new verification code has been sent.');
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setResendingCode(false);
     }
   };
 
@@ -271,6 +339,67 @@ export default function RegisterPage() {
               </div>
             </CardHeader>
             <CardContent className="p-4"> 
+              {awaitingEmailVerification ? (
+                <form onSubmit={handleVerifyEmail} className="space-y-4">
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  {success && (
+                    <Alert className="bg-green-50 border-green-200">
+                      <AlertDescription className="text-green-800">{success}</AlertDescription>
+                    </Alert>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="verificationCode">Email Verification Code *</Label>
+                    <Input
+                      id="verificationCode"
+                      name="verificationCode"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="Enter 6-digit code"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                      required
+                    />
+                    <p className="text-sm text-gray-500">
+                      Code sent to <span className="font-medium text-gray-700">{formData.email}</span>
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleResendVerificationCode}
+                    disabled={resendingCode || verifyingEmail}
+                  >
+                    {resendingCode ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Resending...
+                      </>
+                    ) : (
+                      'Resend code'
+                    )}
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white"
+                    disabled={verifyingEmail || verificationCode.length !== 6}
+                  >
+                    {verifyingEmail ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      'Verify & Continue'
+                    )}
+                  </Button>
+                </form>
+              ) : (
               <form id="registration-form" onSubmit={handleSubmit} className="space-y-3">
               {error && (
                 <Alert variant="destructive">
@@ -562,6 +691,7 @@ export default function RegisterPage() {
                 )}
               </Button>
             </form>
+              )}
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">

@@ -7,7 +7,14 @@ import bcrypt from 'bcryptjs';
 export async function GET(request: NextRequest) {
   try {
     // For now, skip authentication and return all users
+    // Hide unverified registrations from approval queues until email OTP is confirmed
     const users = await db.user.findMany({
+      where: {
+        OR: [
+          { emailVerified: true },
+          { status: { not: 'PENDING' } },
+        ],
+      },
       select: {
         id: true,
         name: true,
@@ -15,6 +22,7 @@ export async function GET(request: NextRequest) {
         role: true,
         status: true,
         isActive: true,
+        emailVerified: true,
         rollNumber: true,
         department: true,
         gpa: true,
@@ -105,6 +113,7 @@ export async function POST(request: NextRequest) {
         role: roleUpper,
         department,
         status: normalizedStatus,
+        emailVerified: true,
         password: hashedPassword,
         // Create teacher profile if role is TEACHER or COMMITTEE_HEAD
         ...(roleUpper === 'TEACHER' || roleUpper === 'COMMITTEE_HEAD'

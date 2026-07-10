@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
     const users = await db.user.findMany({
       where: {
         status,
+        emailVerified: true,
         role: role
           ? (role as 'STUDENT' | 'TEACHER')
           : { in: ['STUDENT', 'TEACHER'] },
@@ -78,6 +79,7 @@ export async function GET(request: NextRequest) {
         email: true,
         role: true,
         status: true,
+        emailVerified: true,
         department: true,
         rollNumber: true,
         gpa: true,
@@ -137,11 +139,18 @@ export async function PATCH(request: NextRequest) {
 
     const existing = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, role: true, name: true },
+      select: { id: true, role: true, name: true, emailVerified: true },
     });
 
     if (!existing) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (!existing.emailVerified) {
+      return NextResponse.json(
+        { error: 'User has not verified their email yet' },
+        { status: 400 },
+      );
     }
 
     if (!['STUDENT', 'TEACHER'].includes(existing.role)) {

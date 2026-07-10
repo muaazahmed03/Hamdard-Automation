@@ -208,6 +208,98 @@ body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
   }
 }
 
+// Send registration email verification code
+export async function sendRegistrationVerificationEmail(
+  email: string,
+  verificationCode: string,
+  userName: string
+) {
+  const transporter = createEmailTransporter();
+  const adminEmail = getAdminEmail();
+
+  const mailOptions = {
+    from: {
+      name: 'FYP Management System',
+      address: process.env.EMAIL_USER || adminEmail
+    },
+    to: email,
+    replyTo: process.env.EMAIL_USER || adminEmail,
+    subject: 'Verify Your Email - FYP Management System',
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+.container { max-width: 600px; margin: 0 auto; padding: 20px; }
+.header { background-color: #16a34a; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+.content { background-color: #f9f9f9; padding: 30px; border: 1px solid #ddd; border-radius: 0 0 5px 5px; }
+.code-box { background-color: #fff; border: 2px dashed #16a34a; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px; }
+.code { font-size: 32px; font-weight: bold; color: #16a34a; letter-spacing: 5px; font-family: 'Courier New', monospace; }
+.footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
+.warning { background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header"><h1>Verify Your Email</h1></div>
+<div class="content">
+<p>Hello ${userName},</p>
+<p>Thank you for registering with the FYP Management System. Please verify your email address to continue.</p>
+<p>Use the verification code below:</p>
+<div class="code-box">
+<div class="code">${verificationCode}</div>
+</div>
+<p style="text-align: center; color: #666;">Enter this code in the app to complete registration</p>
+<div class="warning">
+<strong>Security Notice:</strong>
+<ul style="margin: 10px 0;">
+<li>This code will expire in 1 hour</li>
+<li>After verification, your account will be sent for admin approval</li>
+<li>Never share this code with anyone</li>
+</ul>
+</div>
+<p>If you did not create this account, you can safely ignore this email.</p>
+<p>Best regards,<br>FYP Management System Team</p>
+</div>
+<div class="footer">
+<p>This is an automated email from ${adminEmail}</p>
+<p>&copy; ${new Date().getFullYear()} FYP Management System. All rights reserved.</p>
+</div>
+</div>
+</body>
+</html>`,
+    text: `Verify Your Email
+
+Hello ${userName},
+
+Thank you for registering with the FYP Management System. Please verify your email address to continue.
+
+Your verification code is: ${verificationCode}
+
+This code will expire in 1 hour. After verification, your account will be sent for admin approval.
+
+If you did not create this account, you can safely ignore this email.
+
+Best regards,
+FYP Management System Team
+Email: ${adminEmail}`,
+  };
+
+  try {
+    console.log('📧 Attempting to send registration verification email to:', email);
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Registration verification email sent successfully!');
+    console.log('   To:', email);
+    console.log('   Message ID:', info.messageId);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Failed to send registration verification email');
+    console.error('   To:', email);
+    console.error('   Error:', error.message || error);
+    return { success: false, error };
+  }
+}
+
 // Send welcome email after registration
 export async function sendWelcomeEmail(
   email: string,

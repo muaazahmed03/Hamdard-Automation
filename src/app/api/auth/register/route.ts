@@ -4,8 +4,11 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
-import { validatePassword, getSystemSettings } from '@/lib/security';
-import { sendWelcomeEmail } from '@/lib/email';
+import { validatePassword } from '@/lib/security';
+import {
+  sendRegistrationVerificationEmail,
+  sendWelcomeEmail,
+} from '@/lib/email';
 import { isValidAccessPass } from '@/lib/access-passes';
 
 const registerSchema = z.object({
@@ -29,6 +32,10 @@ const registerSchema = z.object({
     data: z.string()
   }).optional(),
 });
+
+function generateVerificationCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 // Check system settings
 function getSystemSettings() {
@@ -106,6 +113,52 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUser) {
+      // Allow re-registration attempt only for unverified accounts with same email
+      if (
+        existingUser.email === validatedData.email &&
+        !existingUser.emailVerified &&
+        existingUser.status === 'PENDING'
+      ) {
+        const verificationCode = generateVerificationCode();
+        const emailVerifyExpiry = new Date(Date.now() + 3600000);
+        const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+
+        await db.user.update({
+          where: { id: existingUser.id },
+          data: {
+            name: validatedData.name,
+            password: hashedPassword,
+            emailVerifyToken: verificationCode,
+            emailVerifyExpiry,
+          },
+        });
+
+        try {
+          await sendRegistrationVerificationEmail(
+            existingUser.email,
+            verificationCode,
+            validatedData.name || 'User',
+          );
+        } catch (emailError) {
+          console.error('Failed to resend verification email:', emailError);
+        }
+
+        return NextResponse.json({
+          message:
+            'A verification code has been sent to your email. Please verify to continue registration.',
+          user: {
+            id: existingUser.id,
+            name: validatedData.name,
+            email: existingUser.email,
+            role: existingUser.role,
+            status: existingUser.status,
+          },
+          userId: existingUser.id,
+          requiresEmailVerification: true,
+          emailVerified: false,
+        }, { status: 200 });
+      }
+
       if (existingUser.email === validatedData.email) {
         return NextResponse.json(
           { error: 'Email already registered' },
@@ -203,6 +256,7 @@ export async function POST(request: NextRequest) {
     // Eligibility check for students; all self-registrations stay pending until approval.
     let eligibilityStatus: 'ELIGIBLE' | 'CONDITIONAL' | 'INELIGIBLE' = 'ELIGIBLE';
     let userStatus: 'PENDING' | 'APPROVED' | 'CONDITIONALLY_REGISTERED' = 'PENDING';
+    const requiresEmailVerification = validatedData.role !== 'ADMIN';
 
     if (validatedData.role === 'STUDENT') {
       const cgpa = validatedData.cgpa || 0;
@@ -214,12 +268,22 @@ export async function POST(request: NextRequest) {
       userStatus = 'PENDING';
     }
 
+    const verificationCode = requiresEmailVerification
+      ? generateVerificationCode()
+      : null;
+    const emailVerifyExpiry = requiresEmailVerification
+      ? new Date(Date.now() + 3600000)
+      : null;
+
     const userData: any = {
       name: validatedData.name,
       email: validatedData.email,
       password: hashedPassword,
       role: validatedData.role,
       status: userStatus,
+      emailVerified: !requiresEmailVerification,
+      emailVerifyToken: verificationCode,
+      emailVerifyExpiry,
     };
 
     if (validatedData.role === 'STUDENT') {
@@ -242,6 +306,7 @@ export async function POST(request: NextRequest) {
         department: true,
         gpa: true,
         status: true,
+        emailVerified: true,
         createdAt: true,
       },
     });
@@ -304,12 +369,35 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Send welcome email to the user
+    if (requiresEmailVerification && verificationCode) {
+      try {
+        await sendRegistrationVerificationEmail(
+          user.email,
+          verificationCode,
+          user.name || 'User',
+        );
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError);
+      }
+
+      return NextResponse.json({
+        message:
+          'Registration started. Please verify the code sent to your email to continue.',
+        user,
+        eligibilityStatus: validatedData.role === 'STUDENT' ? eligibilityStatus : undefined,
+        userId: user.id,
+        cgpa: validatedData.cgpa,
+        prerequisitesPassed: validatedData.prerequisitesPassed,
+        requiresEmailVerification: true,
+        emailVerified: false,
+      }, { status: 201 });
+    }
+
+    // Admin (or roles that skip verification): send welcome email immediately
     try {
       await sendWelcomeEmail(user.email, user.name || 'User', user.role);
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
-      // Don't fail registration if email fails
     }
 
     return NextResponse.json({
@@ -319,6 +407,8 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       cgpa: validatedData.cgpa,
       prerequisitesPassed: validatedData.prerequisitesPassed,
+      requiresEmailVerification: false,
+      emailVerified: true,
     }, { status: 201 });
   } catch (error) {
     console.error('Registration error:', error);

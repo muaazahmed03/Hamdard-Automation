@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
         createdAt: true,
         status: true, // Add status to check approval
         isActive: true, // Add isActive to check if account is deactivated
+        emailVerified: true,
       },
     });
 
@@ -93,6 +94,17 @@ export async function POST(request: NextRequest) {
           status: 'DEACTIVATED'
         },
         { status: 403 }
+      );
+    }
+
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        {
+          error:
+            'Please verify your email with the code sent during registration before logging in.',
+          status: 'EMAIL_UNVERIFIED',
+        },
+        { status: 403 },
       );
     }
 
