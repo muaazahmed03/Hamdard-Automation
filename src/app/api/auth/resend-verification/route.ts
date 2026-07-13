@@ -42,14 +42,21 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      try {
-        await sendRegistrationVerificationEmail(
-          user.email,
-          verificationCode,
-          user.name || 'User',
+      const emailResult = await sendRegistrationVerificationEmail(
+        user.email,
+        verificationCode,
+        user.name || 'User',
+      );
+
+      if (!emailResult.success) {
+        console.error('Failed to resend verification email:', emailResult.error);
+        return NextResponse.json(
+          {
+            error:
+              'Could not send verification email. Check Gmail App Password settings and try again.',
+          },
+          { status: 502 },
         );
-      } catch (emailError) {
-        console.error('Failed to resend verification email:', emailError);
       }
     }
 

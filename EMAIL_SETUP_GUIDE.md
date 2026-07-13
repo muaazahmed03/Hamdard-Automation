@@ -58,11 +58,13 @@ npm run dev
 ## Troubleshooting
 
 ### Emails Not Sending?
-- ✅ Verify App Password is correct (no spaces)
+- ✅ Verify App Password is correct (**exactly 16 characters, no spaces**)
 - ✅ Check that 2FA is enabled on Gmail account
-- ✅ Confirm EMAIL_USER matches the Gmail account
-- ✅ Server must be restarted after .env.local changes
-- ✅ Check server console for error messages
+- ✅ Confirm `EMAIL_USER` / sender is `hasnainzaidi962@gmail.com` and the App Password is for **that same** account
+- ✅ Server must be restarted after `.env.local` changes (`npm run dev`)
+- ✅ Check server console for `Invalid login` / `535-5.7.8` — that means the App Password is wrong or revoked
+- ✅ Quick test from project root: `node test-email.js`
+- ✅ Check Spam/Junk folder on the recipient Gmail
 
 ### "Less Secure App Access" Error?
 - Use App Password instead (see steps above)

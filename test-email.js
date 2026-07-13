@@ -1,32 +1,57 @@
 // Test script to verify email configuration
 // Run with: node test-email.js
 
-require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const nodemailer = require('nodemailer');
+
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return;
+  const content = fs.readFileSync(filePath, 'utf8');
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (!(key in process.env)) {
+      process.env[key] = value;
+    }
+  }
+}
+
+loadEnvFile(path.join(__dirname, '.env'));
+loadEnvFile(path.join(__dirname, '.env.local'));
 
 async function testEmailConfig() {
   console.log('🔍 Testing email configuration...\n');
 
-  // Check environment variables
-  if (!process.env.EMAIL_USER) {
-    console.error('❌ EMAIL_USER is not set in .env file');
-    return;
-  }
-  if (!process.env.EMAIL_PASSWORD) {
-    console.error('❌ EMAIL_PASSWORD is not set in .env file');
+  const emailUser = (process.env.EMAIL_USER || 'hasnainzaidi962@gmail.com').trim();
+  const emailPassword = (process.env.EMAIL_PASSWORD || '').replace(/\s+/g, '').trim();
+
+  if (!emailPassword) {
+    console.error('❌ EMAIL_PASSWORD is not set in .env.local');
     return;
   }
 
   console.log('✅ Environment variables found');
-  console.log(`📧 Email User: ${process.env.EMAIL_USER}`);
-  console.log(`🔑 Password: ${'*'.repeat(process.env.EMAIL_PASSWORD.length)}\n`);
+  console.log(`📧 Email User: ${emailUser}`);
+  console.log(`🔑 Password length: ${emailPassword.length} (Gmail App Password should be 16)\n`);
 
-  // Create transporter
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
+      user: emailUser,
+      pass: emailPassword,
     },
   });
 
@@ -35,34 +60,29 @@ async function testEmailConfig() {
     await transporter.verify();
     console.log('✅ SMTP connection successful!\n');
 
-    // Send test email
     console.log('📨 Sending test email...');
     const info = await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // Send to yourself for testing
+      from: emailUser,
+      to: emailUser,
       subject: 'Test Email - FYP Management System',
       html: `
         <h2>✅ Email Configuration Successful!</h2>
         <p>Your email configuration is working correctly.</p>
-        <p>You can now use the password reset functionality.</p>
-        <hr>
-        <p style="color: #666; font-size: 12px;">
-          This is a test email from your FYP Management System.
-        </p>
+        <p>Registration OTP emails should now deliver.</p>
       `,
-      text: 'Email configuration test successful! Your password reset functionality is ready to use.',
+      text: 'Email configuration test successful!',
     });
 
     console.log('✅ Test email sent successfully!');
     console.log(`📬 Message ID: ${info.messageId}`);
-    console.log(`\n✨ Check your inbox at: ${process.env.EMAIL_USER}\n`);
+    console.log(`\n✨ Check inbox (and Spam) at: ${emailUser}\n`);
   } catch (error) {
     console.error('❌ Error testing email configuration:');
     console.error(error.message);
-    
-    if (error.message.includes('Invalid login')) {
-      console.log('\n💡 Tip: Make sure you are using a Gmail App Password, not your regular password.');
-      console.log('   See EMAIL_SETUP.md for instructions on generating an App Password.');
+
+    if (String(error.message).includes('Invalid login')) {
+      console.log('\n💡 Tip: Use a Gmail App Password (no spaces), not your regular password.');
+      console.log('   See EMAIL_SETUP_GUIDE.md');
     }
   }
 }

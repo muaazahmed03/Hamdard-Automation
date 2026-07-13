@@ -133,14 +133,24 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        try {
-          await sendRegistrationVerificationEmail(
-            existingUser.email,
-            verificationCode,
-            validatedData.name || 'User',
+        const emailResult = await sendRegistrationVerificationEmail(
+          existingUser.email,
+          verificationCode,
+          validatedData.name || 'User',
+        );
+
+        if (!emailResult.success) {
+          console.error('Failed to resend verification email:', emailResult.error);
+          return NextResponse.json(
+            {
+              error:
+                'Could not send verification email. Check server email settings (Gmail App Password) and try again.',
+              requiresEmailVerification: true,
+              emailVerified: false,
+              userId: existingUser.id,
+            },
+            { status: 502 },
           );
-        } catch (emailError) {
-          console.error('Failed to resend verification email:', emailError);
         }
 
         return NextResponse.json({
@@ -370,14 +380,25 @@ export async function POST(request: NextRequest) {
     }
 
     if (requiresEmailVerification && verificationCode) {
-      try {
-        await sendRegistrationVerificationEmail(
-          user.email,
-          verificationCode,
-          user.name || 'User',
+      const emailResult = await sendRegistrationVerificationEmail(
+        user.email,
+        verificationCode,
+        user.name || 'User',
+      );
+
+      if (!emailResult.success) {
+        console.error('Failed to send verification email:', emailResult.error);
+        return NextResponse.json(
+          {
+            error:
+              'Account created but verification email failed to send. Use Resend code after fixing email settings, or try again.',
+            user,
+            userId: user.id,
+            requiresEmailVerification: true,
+            emailVerified: false,
+          },
+          { status: 502 },
         );
-      } catch (emailError) {
-        console.error('Failed to send verification email:', emailError);
       }
 
       return NextResponse.json({

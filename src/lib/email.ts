@@ -35,13 +35,25 @@ function getSenderEmail(): string {
   return SYSTEM_SENDER_EMAIL;
 }
 
+/** Gmail App Passwords are 16 chars; Google shows them with spaces — strip those. */
+function getEmailPassword(): string | undefined {
+  const raw = process.env.EMAIL_PASSWORD;
+  if (!raw) return undefined;
+  const normalized = raw.replace(/\s+/g, '').trim();
+  return normalized || undefined;
+}
+
 // Create email transporter using Gmail or other SMTP service
 export const createEmailTransporter = () => {
   const emailUser = getSenderEmail();
-  const emailPassword = process.env.EMAIL_PASSWORD;
+  const emailPassword = getEmailPassword();
 
   if (!emailPassword) {
     console.error('❌ EMAIL_PASSWORD is not set — emails cannot be sent.');
+  } else if (emailPassword.length !== 16) {
+    console.warn(
+      `⚠️ EMAIL_PASSWORD length is ${emailPassword.length}; Gmail App Passwords are usually 16 characters.`,
+    );
   }
 
   if (
@@ -56,7 +68,7 @@ export const createEmailTransporter = () => {
   // Debug logging (remove in production)
   console.log('📧 Email Configuration:');
   console.log('   User:', emailUser);
-  console.log('   Password:', emailPassword ? '✅ Set (' + emailPassword.substring(0, 4) + '****)' : '❌ Not Set');
+  console.log('   Password:', emailPassword ? '✅ Set (****' + emailPassword.slice(-4) + ')' : '❌ Not Set');
   
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
