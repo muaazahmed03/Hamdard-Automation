@@ -20,13 +20,14 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Configure email transporter
+    // Configure email transporter — always send from official FYP mailbox
+    const senderEmail = 'hasnainzaidi962@gmail.com'
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.EMAIL_PORT || '587'),
       secure: false,
       auth: {
-        user: process.env.EMAIL_USER,
+        user: senderEmail,
         pass: process.env.EMAIL_PASSWORD,
       },
     })
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Send email to each user
     const emailPromises = users.map(async (user) => {
       const mailOptions = {
-        from: `"FYP Administration" <${adminEmail}>`,
+        from: `"FYP Administration" <${senderEmail}>`,
         to: user.email,
         subject: `New FYP Policy Document Available - Version ${policyVersion}`,
         html: `

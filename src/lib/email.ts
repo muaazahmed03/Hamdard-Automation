@@ -2,7 +2,9 @@ import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 
-const DEFAULT_CONTACT_EMAIL = 'hasnainzaidi962@gmail.com';
+/** Official mailbox used for all system emails (OTP, reset, welcome). */
+const SYSTEM_SENDER_EMAIL = 'hasnainzaidi962@gmail.com';
+const DEFAULT_CONTACT_EMAIL = SYSTEM_SENDER_EMAIL;
 
 // Get admin / support contact email from env or system settings
 function getAdminEmail(): string {
@@ -28,13 +30,27 @@ function getAdminEmail(): string {
   return DEFAULT_CONTACT_EMAIL;
 }
 
+/** Always send from the official FYP mailbox (not a stale EMAIL_USER override). */
+function getSenderEmail(): string {
+  return SYSTEM_SENDER_EMAIL;
+}
+
 // Create email transporter using Gmail or other SMTP service
 export const createEmailTransporter = () => {
-  const emailUser = process.env.EMAIL_USER || getAdminEmail();
+  const emailUser = getSenderEmail();
   const emailPassword = process.env.EMAIL_PASSWORD;
 
   if (!emailPassword) {
     console.error('❌ EMAIL_PASSWORD is not set — emails cannot be sent.');
+  }
+
+  if (
+    process.env.EMAIL_USER?.trim() &&
+    process.env.EMAIL_USER.trim().toLowerCase() !== SYSTEM_SENDER_EMAIL
+  ) {
+    console.warn(
+      `⚠️ EMAIL_USER is set to ${process.env.EMAIL_USER}, but system emails are forced from ${SYSTEM_SENDER_EMAIL}. Update EMAIL_PASSWORD to the App Password for ${SYSTEM_SENDER_EMAIL}.`,
+    );
   }
   
   // Debug logging (remove in production)
@@ -70,10 +86,10 @@ export async function sendPasswordResetEmail(
   const mailOptions = {
     from: {
       name: 'FYP Management System',
-      address: process.env.EMAIL_USER || adminEmail
+      address: getSenderEmail()
     },
     to: email,
-    replyTo: process.env.EMAIL_USER || adminEmail,
+    replyTo: getSenderEmail(),
     subject: 'Password Reset Code - FYP Management System',
     html: `<!DOCTYPE html>
 <html>
@@ -161,10 +177,10 @@ export async function sendPasswordResetConfirmationEmail(
   const mailOptions = {
     from: {
       name: 'FYP Management System',
-      address: process.env.EMAIL_USER || adminEmail
+      address: getSenderEmail()
     },
     to: email,
-    replyTo: process.env.EMAIL_USER || adminEmail,
+    replyTo: getSenderEmail(),
     subject: 'Password Successfully Reset - FYP Management System',
     html: `<!DOCTYPE html>
 <html>
@@ -220,10 +236,10 @@ export async function sendRegistrationVerificationEmail(
   const mailOptions = {
     from: {
       name: 'FYP Management System',
-      address: process.env.EMAIL_USER || adminEmail
+      address: getSenderEmail()
     },
     to: email,
-    replyTo: process.env.EMAIL_USER || adminEmail,
+    replyTo: getSenderEmail(),
     subject: 'Verify Your Email - FYP Management System',
     html: `<!DOCTYPE html>
 <html>
@@ -321,10 +337,10 @@ export async function sendWelcomeEmail(
   const mailOptions = {
     from: {
       name: 'FYP Management System',
-      address: process.env.EMAIL_USER || adminEmail
+      address: getSenderEmail()
     },
     to: email,
-    replyTo: process.env.EMAIL_USER || adminEmail,
+    replyTo: getSenderEmail(),
     subject: 'Welcome to FYP Management System - Account Pending Approval',
     html: `<!DOCTYPE html>
 <html>

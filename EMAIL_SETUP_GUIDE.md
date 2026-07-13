@@ -26,15 +26,18 @@ To enable email functionality for password reset, you need to generate a Gmail A
 
 Example:
 ```
-EMAIL_USER=ahmedshayan928@gmail.com
+EMAIL_USER=hasnainzaidi962@gmail.com
 EMAIL_PASSWORD=abcd efgh ijkl mnop   # This is what Google shows
 ```
 
 Should become:
 ```
-EMAIL_USER=ahmedshayan928@gmail.com
+EMAIL_USER=hasnainzaidi962@gmail.com
 EMAIL_PASSWORD=abcdefghijklmnop       # Remove spaces
 ```
+
+All system emails (registration OTP, forgot password, welcome) are sent from **hasnainzaidi962@gmail.com**.
+`EMAIL_PASSWORD` must be a Gmail App Password for that same account.
 
 ### Step 4: Restart the Server
 After updating .env.local:
