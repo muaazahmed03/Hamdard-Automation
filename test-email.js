@@ -33,7 +33,7 @@ loadEnvFile(path.join(__dirname, '.env.local'));
 async function testEmailConfig() {
   console.log('🔍 Testing email configuration...\n');
 
-  const emailUser = (process.env.EMAIL_USER || 'hasnainzaidi962@gmail.com').trim();
+  const emailUser = (process.env.EMAIL_USER || 'ahmedshayan928@gmail.com').trim();
   const emailPassword = (process.env.EMAIL_PASSWORD || '').replace(/\s+/g, '').trim();
 
   if (!emailPassword) {

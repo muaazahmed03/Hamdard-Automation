@@ -2,9 +2,14 @@ import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 
-/** Official mailbox used for all system emails (OTP, reset, welcome). */
-const SYSTEM_SENDER_EMAIL = 'hasnainzaidi962@gmail.com';
-const DEFAULT_CONTACT_EMAIL = SYSTEM_SENDER_EMAIL;
+/**
+ * SMTP mailbox that actually sends mail (OTP / reset / welcome).
+ * Must match EMAIL_PASSWORD — Gmail rejects mismatched user/password.
+ * Working setup: ahmedshayan928@gmail.com + its App Password.
+ * Contact/admin display email can stay separate (see getAdminEmail).
+ */
+const DEFAULT_SENDER_EMAIL = 'ahmedshayan928@gmail.com';
+const DEFAULT_CONTACT_EMAIL = 'hasnainzaidi962@gmail.com';
 
 // Get admin / support contact email from env or system settings
 function getAdminEmail(): string {
@@ -30,9 +35,10 @@ function getAdminEmail(): string {
   return DEFAULT_CONTACT_EMAIL;
 }
 
-/** Always send from the official FYP mailbox (not a stale EMAIL_USER override). */
+/** From / SMTP auth user — always EMAIL_USER (must own the App Password). */
 function getSenderEmail(): string {
-  return SYSTEM_SENDER_EMAIL;
+  const fromEnv = process.env.EMAIL_USER?.trim();
+  return fromEnv || DEFAULT_SENDER_EMAIL;
 }
 
 /** Gmail App Passwords are 16 chars; Google shows them with spaces — strip those. */
@@ -53,15 +59,6 @@ export const createEmailTransporter = () => {
   } else if (emailPassword.length !== 16) {
     console.warn(
       `⚠️ EMAIL_PASSWORD length is ${emailPassword.length}; Gmail App Passwords are usually 16 characters.`,
-    );
-  }
-
-  if (
-    process.env.EMAIL_USER?.trim() &&
-    process.env.EMAIL_USER.trim().toLowerCase() !== SYSTEM_SENDER_EMAIL
-  ) {
-    console.warn(
-      `⚠️ EMAIL_USER is set to ${process.env.EMAIL_USER}, but system emails are forced from ${SYSTEM_SENDER_EMAIL}. Update EMAIL_PASSWORD to the App Password for ${SYSTEM_SENDER_EMAIL}.`,
     );
   }
   

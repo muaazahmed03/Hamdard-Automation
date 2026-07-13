@@ -26,18 +26,22 @@ To enable email functionality for password reset, you need to generate a Gmail A
 
 Example:
 ```
-EMAIL_USER=hasnainzaidi962@gmail.com
+EMAIL_USER=ahmedshayan928@gmail.com
 EMAIL_PASSWORD=abcd efgh ijkl mnop   # This is what Google shows
 ```
 
 Should become:
 ```
-EMAIL_USER=hasnainzaidi962@gmail.com
+EMAIL_USER=ahmedshayan928@gmail.com
 EMAIL_PASSWORD=abcdefghijklmnop       # Remove spaces
 ```
 
-All system emails (registration OTP, forgot password, welcome) are sent from **hasnainzaidi962@gmail.com**.
-`EMAIL_PASSWORD` must be a Gmail App Password for that same account.
+OTP / system emails are sent from **`EMAIL_USER`** (must match the App Password account).
+Admin contact display can still be Hasnain in system settings — that is separate from SMTP login.
+
+**Important:** Do not set `EMAIL_USER=hasnainzaidi962@gmail.com` unless you also create a
+Gmail App Password for that Hasnain account. Using Hasnain as sender with Shayan's
+App Password causes `Invalid login` and OTP emails will not send.
 
 ### Step 4: Restart the Server
 After updating .env.local:
@@ -60,9 +64,9 @@ npm run dev
 ### Emails Not Sending?
 - ✅ Verify App Password is correct (**exactly 16 characters, no spaces**)
 - ✅ Check that 2FA is enabled on Gmail account
-- ✅ Confirm `EMAIL_USER` / sender is `hasnainzaidi962@gmail.com` and the App Password is for **that same** account
+- ✅ Confirm `EMAIL_USER` and `EMAIL_PASSWORD` belong to the **same** Gmail account
 - ✅ Server must be restarted after `.env.local` changes (`npm run dev`)
-- ✅ Check server console for `Invalid login` / `535-5.7.8` — that means the App Password is wrong or revoked
+- ✅ Check server console for `Invalid login` / `535-5.7.8` — wrong App Password or wrong EMAIL_USER
 - ✅ Quick test from project root: `node test-email.js`
 - ✅ Check Spam/Junk folder on the recipient Gmail
 
