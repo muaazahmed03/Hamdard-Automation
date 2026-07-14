@@ -36,10 +36,12 @@ EMAIL_USER=hasnainzaidi962@gmail.com
 EMAIL_PASSWORD=abcdefghijklmnop       # Remove spaces
 ```
 
-All system emails (registration OTP, forgot password, welcome) are sent from **`EMAIL_USER`**.
-`EMAIL_USER` and `EMAIL_PASSWORD` must belong to the **same** Gmail account (official: hasnainzaidi962@gmail.com).
+Registration OTP + forgot password always send from **hasnainzaidi962@gmail.com**.
+`EMAIL_PASSWORD` must be a Gmail App Password for **that same** Hasnain account.
 
-**Important:** If login fails with `Invalid login`, generate a fresh App Password for that same Gmail and update `.env.local`.
+**Mobile app note:** the app calls the live Render API (`hamdard-automation.onrender.com`),
+not only your local PC. So set the same `EMAIL_USER` / `EMAIL_PASSWORD` in the
+**Render → Environment** dashboard, then redeploy / wait for auto-deploy.
 
 ### Step 4: Restart the Server
 After updating .env.local:

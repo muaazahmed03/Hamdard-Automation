@@ -20,9 +20,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // SMTP user must match EMAIL_PASSWORD (Gmail App Password for that mailbox)
-    const senderEmail =
-      process.env.EMAIL_USER?.trim() || 'hasnainzaidi962@gmail.com'
+    // Always send From Hasnain — EMAIL_PASSWORD must be Hasnain's App Password
+    const senderEmail = 'hasnainzaidi962@gmail.com'
     const emailPassword = (process.env.EMAIL_PASSWORD || '').replace(/\s+/g, '')
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',

@@ -3,12 +3,12 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * SMTP mailbox that actually sends mail (OTP / reset / welcome).
- * Must match EMAIL_PASSWORD — Gmail rejects mismatched user/password.
- * Official sender: hasnainzaidi962@gmail.com
+ * Official SMTP + From mailbox for ALL system mail
+ * (registration OTP, forgot password, welcome, policy).
+ * Forced so stale EMAIL_USER on Render cannot send as ahmedshayan again.
  */
-const DEFAULT_SENDER_EMAIL = 'hasnainzaidi962@gmail.com';
-const DEFAULT_CONTACT_EMAIL = 'hasnainzaidi962@gmail.com';
+const SYSTEM_SENDER_EMAIL = 'hasnainzaidi962@gmail.com';
+const DEFAULT_CONTACT_EMAIL = SYSTEM_SENDER_EMAIL;
 
 // Get admin / support contact email from env or system settings
 function getAdminEmail(): string {
@@ -34,10 +34,9 @@ function getAdminEmail(): string {
   return DEFAULT_CONTACT_EMAIL;
 }
 
-/** From / SMTP auth user — always EMAIL_USER (must own the App Password). */
+/** Always send From + SMTP auth as Hasnain (ignore stale EMAIL_USER). */
 function getSenderEmail(): string {
-  const fromEnv = process.env.EMAIL_USER?.trim();
-  return fromEnv || DEFAULT_SENDER_EMAIL;
+  return SYSTEM_SENDER_EMAIL;
 }
 
 /** Gmail App Passwords are 16 chars; Google shows them with spaces — strip those. */
@@ -58,6 +57,15 @@ export const createEmailTransporter = () => {
   } else if (emailPassword.length !== 16) {
     console.warn(
       `⚠️ EMAIL_PASSWORD length is ${emailPassword.length}; Gmail App Passwords are usually 16 characters.`,
+    );
+  }
+
+  if (
+    process.env.EMAIL_USER?.trim() &&
+    process.env.EMAIL_USER.trim().toLowerCase() !== SYSTEM_SENDER_EMAIL
+  ) {
+    console.warn(
+      `⚠️ EMAIL_USER=${process.env.EMAIL_USER} is ignored. Mail always sends from ${SYSTEM_SENDER_EMAIL}. Set EMAIL_PASSWORD to Hasnain's App Password.`,
     );
   }
   
