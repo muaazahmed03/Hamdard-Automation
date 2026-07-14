@@ -26,22 +26,20 @@ To enable email functionality for password reset, you need to generate a Gmail A
 
 Example:
 ```
-EMAIL_USER=ahmedshayan928@gmail.com
+EMAIL_USER=hasnainzaidi962@gmail.com
 EMAIL_PASSWORD=abcd efgh ijkl mnop   # This is what Google shows
 ```
 
 Should become:
 ```
-EMAIL_USER=ahmedshayan928@gmail.com
+EMAIL_USER=hasnainzaidi962@gmail.com
 EMAIL_PASSWORD=abcdefghijklmnop       # Remove spaces
 ```
 
-OTP / system emails are sent from **`EMAIL_USER`** (must match the App Password account).
-Admin contact display can still be Hasnain in system settings — that is separate from SMTP login.
+All system emails (registration OTP, forgot password, welcome) are sent from **`EMAIL_USER`**.
+`EMAIL_USER` and `EMAIL_PASSWORD` must belong to the **same** Gmail account (official: hasnainzaidi962@gmail.com).
 
-**Important:** Do not set `EMAIL_USER=hasnainzaidi962@gmail.com` unless you also create a
-Gmail App Password for that Hasnain account. Using Hasnain as sender with Shayan's
-App Password causes `Invalid login` and OTP emails will not send.
+**Important:** If login fails with `Invalid login`, generate a fresh App Password for that same Gmail and update `.env.local`.
 
 ### Step 4: Restart the Server
 After updating .env.local:

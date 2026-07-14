@@ -5,10 +5,9 @@ import path from 'path';
 /**
  * SMTP mailbox that actually sends mail (OTP / reset / welcome).
  * Must match EMAIL_PASSWORD — Gmail rejects mismatched user/password.
- * Working setup: ahmedshayan928@gmail.com + its App Password.
- * Contact/admin display email can stay separate (see getAdminEmail).
+ * Official sender: hasnainzaidi962@gmail.com
  */
-const DEFAULT_SENDER_EMAIL = 'ahmedshayan928@gmail.com';
+const DEFAULT_SENDER_EMAIL = 'hasnainzaidi962@gmail.com';
 const DEFAULT_CONTACT_EMAIL = 'hasnainzaidi962@gmail.com';
 
 // Get admin / support contact email from env or system settings
