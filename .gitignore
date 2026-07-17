@@ -47,3 +47,15 @@ test
 prompt
 
 server.log
+
+# local databases (never commit real data)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+prisma/*.db
+db/*.db
+
+# build / run logs
+*.log
+build.log

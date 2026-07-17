@@ -205,6 +205,14 @@ export async function PATCH(
                      (assignment.evaluationStatus === 'ACCEPTED' ? 'ACCEPTED' : finalEvaluationStatus);
     }
 
+    // Admin / committee decisions are authoritative: the requested status is
+    // applied directly (Accept, Conditionally Approve, Re-evaluate) without
+    // waiting for full jury consensus. This keeps the jury management actions
+    // in sync with what the committee selects in the app.
+    if (isAdmin) {
+      overallStatus = finalEvaluationStatus;
+    }
+
     // Calculate average marks if multiple evaluations
     let averageMarks = marks || null;
     if (allEvaluations.length > 1 && allEvaluations.some((e: any) => e.marks !== null && e.marks !== undefined)) {
