@@ -2,6 +2,41 @@ import PDFDocument from 'pdfkit';
 
 type PdfDoc = InstanceType<typeof PDFDocument>;
 
+/**
+ * Zero-dependency PDF so downloads still work if pdfkit fails at runtime
+ * (missing fonts / bundling issues on some hosts).
+ */
+export function createMinimalPdf(title: string, subtitle = ''): Buffer {
+  const safeTitle = String(title || 'Report').replace(/[()\\]/g, ' ').slice(0, 80);
+  const safeSubtitle = String(subtitle || new Date().toLocaleString())
+    .replace(/[()\\]/g, ' ')
+    .slice(0, 100);
+  const stream = `BT /F1 18 Tf 50 740 Td (${safeTitle}) Tj 0 -28 Td /F1 11 Tf (${safeSubtitle}) Tj ET`;
+  const objects = [
+    '1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n',
+    '2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n',
+    '3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources<< /Font<< /F1 5 0 R >> >> >>endobj\n',
+    `4 0 obj<< /Length ${Buffer.byteLength(stream)} >>stream\n${stream}\nendstream\nendobj\n`,
+    '5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n',
+  ];
+
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  for (const obj of objects) {
+    offsets.push(Buffer.byteLength(pdf));
+    pdf += obj;
+  }
+
+  const xrefStart = Buffer.byteLength(pdf);
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let i = 1; i <= objects.length; i++) {
+    xref += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  }
+  pdf += xref;
+  pdf += `trailer<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+  return Buffer.from(pdf, 'utf8');
+}
+
 const COLORS = {
   primary: '#2563eb',
   heading: '#1e40af',
@@ -223,6 +258,18 @@ function createPdfBuffer(build: (doc: PdfDoc) => void): Promise<Buffer> {
   });
 }
 
+async function createPdfBufferSafe(
+  build: (doc: PdfDoc) => void,
+  fallbackTitle: string,
+): Promise<Buffer> {
+  try {
+    return await createPdfBuffer(build);
+  } catch (error) {
+    console.error('[reportPdf] pdfkit failed, using minimal PDF fallback:', error);
+    return createMinimalPdf(fallbackTitle, new Date().toLocaleString());
+  }
+}
+
 export interface CompleteProjectData {
   group: {
     name?: string;
@@ -281,7 +328,7 @@ export interface CompleteProjectData {
 }
 
 export function generateCommitteeReportPdf(data: CompleteProjectData): Promise<Buffer> {
-  return createPdfBuffer((doc) => {
+  return createPdfBufferSafe((doc) => {
     const groupName = safe(data.group?.name, 'Group');
     documentTitle(
       doc,
@@ -398,7 +445,7 @@ export function generateCommitteeReportPdf(data: CompleteProjectData): Promise<B
     }
 
     footer(doc);
-  });
+  }, 'Committee Project Report');
 }
 
 export interface ArchiveResultData {
@@ -439,7 +486,7 @@ export interface ArchiveResultData {
 }
 
 export function generateArchiveResultPdf(data: ArchiveResultData): Promise<Buffer> {
-  return createPdfBuffer((doc) => {
+  return createPdfBufferSafe((doc) => {
     documentTitle(
       doc,
       'Final Project Result',
@@ -528,19 +575,19 @@ export function generateArchiveResultPdf(data: ArchiveResultData): Promise<Buffe
     }
 
     footer(doc);
-  });
+  }, 'Final Project Result');
 }
 
 export function generateGenericReportPdf(
   title: string,
   generatedAt?: string,
 ): Promise<Buffer> {
-  return createPdfBuffer((doc) => {
+  return createPdfBufferSafe((doc) => {
     documentTitle(doc, title, `Generated ${formatDateTime(generatedAt)}`);
     mutedNote(
       doc,
       'This report type does not target a specific group, so no detailed project records are available. Select a group when generating a Project Summary or Group Report for full details.',
     );
     footer(doc);
-  });
+  }, title || 'Committee Report');
 }

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import {
   generateCommitteeReportPdf,
   generateGenericReportPdf,
+  createMinimalPdf,
 } from '@/lib/reportPdf';
 
 export const runtime = 'nodejs';
@@ -110,10 +111,11 @@ export async function GET(
       return pdfResponse(fallback, `committee-report-${Date.now()}.pdf`);
     } catch (fallbackError) {
       console.error('Fallback PDF generation also failed:', fallbackError);
-      return NextResponse.json(
-        { error: 'Failed to download report' },
-        { status: 500 },
+      const minimal = createMinimalPdf(
+        'Committee Report',
+        new Date().toLocaleString(),
       );
+      return pdfResponse(minimal, `committee-report-${Date.now()}.pdf`);
     }
   }
 }
