@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { generateArchiveResultPdf } from '@/lib/reportPdf';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // GET - Generate and retrieve project archive
 export async function GET(

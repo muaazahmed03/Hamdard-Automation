@@ -6,6 +6,7 @@ import {
 } from '@/lib/reportPdf';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 function pdfResponse(buffer: Buffer, fileName: string) {
   const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -14,6 +15,7 @@ function pdfResponse(buffer: Buffer, fileName: string) {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename="${safeName}"`,
       'Content-Length': String(buffer.length),
+      'Cache-Control': 'no-store',
     },
   });
 }
@@ -24,24 +26,31 @@ export async function GET(
 ) {
   try {
     const { reportId } = await params;
+    const groupId = request.nextUrl.searchParams.get('groupId');
 
     // Ad-hoc generated reports carry a "report-" id and an optional groupId.
     if (reportId.startsWith('report-')) {
-      const groupId = request.nextUrl.searchParams.get('groupId');
-
-      // Reports without a target group (e.g. performance/analysis) still
-      // produce a valid PDF instead of failing the download.
-      if (!groupId) {
-        const genericPdf = await generateGenericReportPdf(
-          'Committee Report',
-          new Date().toISOString(),
-        );
-        return pdfResponse(genericPdf, `committee-report-${Date.now()}.pdf`);
+      if (groupId) {
+        try {
+          const projectData = await fetchCompleteProjectData(groupId);
+          const pdfBuffer = await generateCommitteeReportPdf(projectData);
+          return pdfResponse(
+            pdfBuffer,
+            `project-report-${groupId}-${Date.now()}.pdf`,
+          );
+        } catch (error) {
+          console.error(
+            '[Committee Report] Group report failed, falling back to generic PDF:',
+            error,
+          );
+        }
       }
 
-      const projectData = await fetchCompleteProjectData(groupId);
-      const pdfBuffer = await generateCommitteeReportPdf(projectData);
-      return pdfResponse(pdfBuffer, `project-report-${groupId}-${Date.now()}.pdf`);
+      const genericPdf = await generateGenericReportPdf(
+        'Committee Report',
+        new Date().toISOString(),
+      );
+      return pdfResponse(genericPdf, `committee-report-${Date.now()}.pdf`);
     }
 
     // For defense schedule reports
@@ -50,114 +59,145 @@ export async function GET(
       include: {
         juryAssignments: {
           include: {
-            defenseSchedule: true
-          }
-        }
-      }
+            defenseSchedule: true,
+          },
+        },
+      },
     });
 
     if (!defenseSchedule) {
-      return NextResponse.json(
-        { error: 'Report not found' },
-        { status: 404 }
+      // Still return a valid PDF so the mobile app can open something.
+      const genericPdf = await generateGenericReportPdf(
+        'Committee Report',
+        new Date().toISOString(),
       );
+      return pdfResponse(genericPdf, `committee-report-${Date.now()}.pdf`);
     }
 
-    // Get group ID from first assignment
-    const firstAssignment = defenseSchedule.juryAssignments[0];
-    if (!firstAssignment) {
-      return NextResponse.json(
-        { error: 'No assignments found for this report' },
-        { status: 404 }
+    const targetGroupId =
+      groupId || defenseSchedule.juryAssignments[0]?.groupId || null;
+
+    if (!targetGroupId) {
+      const genericPdf = await generateGenericReportPdf(
+        `${defenseSchedule.defenseType || 'Defense'} Report`,
+        new Date().toISOString(),
       );
+      return pdfResponse(genericPdf, `defense-report-${reportId}-${Date.now()}.pdf`);
     }
 
-    const projectData = await fetchCompleteProjectData(firstAssignment.groupId);
-    const pdfBuffer = await generateCommitteeReportPdf(projectData);
-    return pdfResponse(pdfBuffer, `defense-report-${reportId}-${Date.now()}.pdf`);
+    try {
+      const projectData = await fetchCompleteProjectData(targetGroupId);
+      const pdfBuffer = await generateCommitteeReportPdf(projectData);
+      return pdfResponse(pdfBuffer, `defense-report-${reportId}-${Date.now()}.pdf`);
+    } catch (error) {
+      console.error(
+        '[Committee Report] Defense report failed, falling back to generic PDF:',
+        error,
+      );
+      const genericPdf = await generateGenericReportPdf(
+        `${defenseSchedule.defenseType || 'Defense'} Report`,
+        new Date().toISOString(),
+      );
+      return pdfResponse(genericPdf, `defense-report-${reportId}-${Date.now()}.pdf`);
+    }
   } catch (error) {
     console.error('Error downloading report:', error);
-    return NextResponse.json(
-      { error: 'Failed to download report' },
-      { status: 500 }
-    );
+    try {
+      const fallback = await generateGenericReportPdf(
+        'Committee Report',
+        new Date().toISOString(),
+      );
+      return pdfResponse(fallback, `committee-report-${Date.now()}.pdf`);
+    } catch (fallbackError) {
+      console.error('Fallback PDF generation also failed:', fallbackError);
+      return NextResponse.json(
+        { error: 'Failed to download report' },
+        { status: 500 },
+      );
+    }
   }
 }
 
 async function fetchCompleteProjectData(groupId: string) {
-  // Fetch group with members
   const group = await db.group.findUnique({
     where: { id: groupId },
     include: {
       members: {
         include: {
-          user: true
-        }
+          user: true,
+        },
       },
       projects: {
         include: {
           supervisor: true,
           submissions: {
             orderBy: {
-              createdAt: 'desc'
-            }
-          }
-        }
-      }
-    }
+              createdAt: 'desc',
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!group) {
     throw new Error('Group not found');
   }
 
-  // Fetch all project submissions
   const submissions = await db.projectSubmission.findMany({
     where: {
       project: {
-        groupId: groupId
-      }
+        groupId: groupId,
+      },
     },
     orderBy: {
-      createdAt: 'desc'
-    }
+      createdAt: 'desc',
+    },
   });
 
-  // Fetch evaluations
   const evaluations = await db.evaluation.findMany({
     where: { groupId },
     include: {
-      announcement: true
+      announcement: true,
     },
     orderBy: {
-      createdAt: 'desc'
-    }
+      createdAt: 'desc',
+    },
   });
 
-  // Fetch defense schedules for this group
   const juryAssignments = await db.juryAssignment.findMany({
     where: { groupId },
     include: {
-      defenseSchedule: true
+      defenseSchedule: true,
     },
     orderBy: {
-      createdAt: 'desc'
-    }
+      createdAt: 'desc',
+    },
   });
 
-  // Fetch notifications related to this group (as chat logs/meeting history)
-  const notifications = await db.notification.findMany({
-    where: {
-      OR: [
-        { relatedId: { in: group.projects.map(p => p.id) } },
-        { message: { contains: group.name } }
-      ]
-    },
-    orderBy: {
-      createdAt: 'desc'
-    },
-    take: 100
-  });
+  let notifications: Array<{
+    createdAt: Date;
+    type: string;
+    title: string;
+    message: string;
+  }> = [];
+  try {
+    const projectIds = group.projects.map((p) => p.id);
+    notifications = await db.notification.findMany({
+      where: {
+        OR: [
+          ...(projectIds.length ? [{ relatedId: { in: projectIds } }] : []),
+          { message: { contains: group.name } },
+        ],
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 100,
+    });
+  } catch (error) {
+    console.warn('[Committee Report] Skipping notifications section:', error);
+  }
 
   return {
     group,
@@ -165,6 +205,6 @@ async function fetchCompleteProjectData(groupId: string) {
     evaluations,
     juryAssignments,
     notifications,
-    generatedAt: new Date().toISOString()
+    generatedAt: new Date().toISOString(),
   };
 }

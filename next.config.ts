@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Keep pdfkit (and its font assets) outside the Next bundler so report/result
+  // PDF generation works in production on Render.
+  serverExternalPackages: ['pdfkit'],
   // 禁用 Next.js 热重载，由 nodemon 处理重编译
   reactStrictMode: false,
   webpack: (config, { dev }) => {

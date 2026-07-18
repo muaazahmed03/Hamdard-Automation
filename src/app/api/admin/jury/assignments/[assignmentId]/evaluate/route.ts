@@ -64,14 +64,18 @@ export async function PATCH(
       juryMembers = [];
     }
 
-    // Check if user is admin OR is in the jury members list
+    // Admin / committee head can force overall status. Jury members / chairperson
+    // can also submit their individual evaluation.
     const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    const isCommitteeHead = user.role === 'COMMITTEE_HEAD';
+    const canForceOverallStatus = isAdmin || isCommitteeHead;
     const isJuryMember = Array.isArray(juryMembers) && juryMembers.includes(userId);
     const isChairperson = assignment.chairpersonId === userId;
 
     console.log(`[Jury Evaluation] Authorization check for user ${userId}:`, {
       userRole: user.role,
       isAdmin,
+      isCommitteeHead,
       isJuryMember,
       isChairperson,
       juryMembers,
@@ -79,7 +83,7 @@ export async function PATCH(
       assignmentId: assignmentId
     });
 
-    if (!isAdmin && !isJuryMember && !isChairperson) {
+    if (!canForceOverallStatus && !isJuryMember && !isChairperson) {
       console.error(`[Jury Evaluation] Unauthorized: User ${userId} is not authorized to evaluate assignment ${assignmentId}`);
       return NextResponse.json(
         { error: 'Unauthorized - You are not assigned as a jury member for this assignment' },
@@ -205,11 +209,10 @@ export async function PATCH(
                      (assignment.evaluationStatus === 'ACCEPTED' ? 'ACCEPTED' : finalEvaluationStatus);
     }
 
-    // Admin / committee decisions are authoritative: the requested status is
-    // applied directly (Accept, Conditionally Approve, Re-evaluate) without
-    // waiting for full jury consensus. This keeps the jury management actions
-    // in sync with what the committee selects in the app.
-    if (isAdmin) {
+    // Admin / committee head decisions are authoritative: the requested status
+    // is applied directly (Accept, Conditionally Approve, Re-evaluate) without
+    // waiting for full jury consensus.
+    if (canForceOverallStatus) {
       overallStatus = finalEvaluationStatus;
     }
 

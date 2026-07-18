@@ -1,13 +1,20 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { db as prisma } from '@/lib/db'
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
   try {
-    const { id } = params
-    
+    const resolved = await Promise.resolve(params)
+    const id = resolved.id
+
     // First, get the submission from database to get the fileUrl
     const submission = await prisma.projectSubmission.findUnique({
       where: { id },
@@ -28,8 +35,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     // fileUrl is like /uploads/proposals/filename or /uploads/filename
     // Remove leading slash and construct full path
-    const fileUrlPath = submission.fileUrl.startsWith('/') 
-      ? submission.fileUrl.slice(1) 
+    const fileUrlPath = submission.fileUrl.startsWith('/')
+      ? submission.fileUrl.slice(1)
       : submission.fileUrl
     const filePath = join(process.cwd(), 'public', fileUrlPath)
 
@@ -41,8 +48,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const buffer = await readFile(filePath)
 
     // Use fileName from database, or derive from fileUrl
-    const originalName = submission.fileName || 
-                        fileUrlPath.split('/').pop() || 
+    const originalName = submission.fileName ||
+                        fileUrlPath.split('/').pop() ||
                         'download'
 
     // determine content-type by extension (simple)
@@ -62,6 +69,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const headers: Record<string, string> = {
       'Content-Type': contentType,
       'Content-Length': String(buffer.length),
+      'Cache-Control': 'no-store',
     }
 
     // set content-disposition
@@ -71,7 +79,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       headers['Content-Disposition'] = `attachment; filename="${encodeURIComponent(originalName)}"`
     }
 
-    return new Response(buffer, { status: 200, headers })
+    return new NextResponse(new Uint8Array(buffer), { status: 200, headers })
   } catch (err) {
     console.error('Download endpoint error:', err)
     return NextResponse.json({ error: 'Failed to read file', details: err instanceof Error ? err.message : String(err) }, { status: 500 })
