@@ -4,6 +4,7 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import { createNotification, NotificationTemplates, notifyUsersByRole } from '@/lib/notification-service';
 import { db as prisma } from '@/lib/db';
+import { saveSubmissionFileBytes } from '@/lib/submission-file-storage';
 
 const DOCUMENT_FILE_TYPES = new Set(['FYP_I', 'FYP_II', 'OTHER']);
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
@@ -193,6 +194,17 @@ export async function POST(request: Request) {
             isSubmitted: true,
           },
         });
+
+        try {
+          await saveSubmissionFileBytes({
+            submissionId: createdSubmission.id,
+            buffer,
+            fileName: file.name,
+            mimeType: file.type || undefined,
+          });
+        } catch (persistError) {
+          console.error('Failed to persist submission file bytes:', persistError);
+        }
 
         const categoryLabel = documentCategoryLabel(fileTypeUpperEarly);
         try {
@@ -391,6 +403,17 @@ export async function POST(request: Request) {
       });
       const submissionId = createdSubmission.id;
       console.log(`File saved to database: ${file.name} for student ${userId} with ID: ${submissionId}`);
+
+      try {
+        await saveSubmissionFileBytes({
+          submissionId,
+          buffer,
+          fileName: file.name,
+          mimeType: file.type || undefined,
+        });
+      } catch (persistError) {
+        console.error('Failed to persist submission file bytes:', persistError);
+      }
       
       // Notify supervisor if this is a proposal (needs approval)
       if (fileTypeUpper === 'PROPOSAL') {
